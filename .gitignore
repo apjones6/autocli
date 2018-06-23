@@ -1,0 +1,69 @@
+#################
+## Visual Studio
+#################
+*.suo
+*.user
+*.sln.docstates
+*.userprefs
+.vs/
+
+#########
+## Build results
+#########
+[Dd]ebug/
+[Rr]elease/
+*_i.c
+*_p.c
+*.ilk
+*.meta
+*.jmx
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.vspscc
+.builds
+*.dotCover
+*.js.map
+.gradle
+
+#########
+## NUGET
+#########
+packages/
+
+#########
+## Resharp
+#########
+_ReSharper*
+
+#########
+## Misc
+#########
+[Bb]in
+[Oo]bj
+TestResults
+*.Cache
+ClientBin
+stylecop.*
+~$*
+*.dbmdl
+Generated_Code #added for RIA/Silverlight projects
+NuGet.exe
+
+############
+## Windows
+############
+
+# Windows image file caches
+Thumbs.db
+
+# Folder config file
+Desktop.ini
