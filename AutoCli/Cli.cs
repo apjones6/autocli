@@ -3,11 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace AutoCli
 {
-    public class Cli
+	public class Cli
     {
 		private readonly List<CliMethod> methods = new List<CliMethod>();
 		private readonly Func<Type, object> serviceBuilder;

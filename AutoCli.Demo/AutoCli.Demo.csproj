@@ -61,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoCli\AutoCli.csproj">
-      <Project>{5c22dc31-c66e-40cf-838c-c38039423101}</Project>
+      <Project>{d0396e9c-d16d-4e5f-b1c5-6537747c3195}</Project>
       <Name>AutoCli</Name>
     </ProjectReference>
   </ItemGroup>
