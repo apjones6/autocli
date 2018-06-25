@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
@@ -10,7 +6,10 @@ namespace AutoCli.Demo
 	{
 		static void Main(string[] args)
 		{
-			var cli = new Cli(GetService);
+			var cli = new Cli(GetService)
+			{
+				MethodStrategy = MethodStrategy.All
+			};
 
 			cli.AddService<IGroupService>();
 			cli.AddService<IUserService>();

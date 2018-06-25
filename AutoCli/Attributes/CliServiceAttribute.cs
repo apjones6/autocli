@@ -11,6 +11,8 @@ namespace AutoCli.Attributes
 			Name = name;
 		}
 
+		public MethodStrategy MethodStrategy { get; set; }
+
 		public string Name { get; }
     }
 }

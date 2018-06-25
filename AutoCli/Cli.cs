@@ -16,6 +16,8 @@ namespace AutoCli
 			this.serviceBuilder = serviceBuilder ?? throw new ArgumentNullException(nameof(serviceBuilder));
 		}
 
+		public MethodStrategy MethodStrategy { get; set; }
+
 		public void AddService<T>()
 		{
 			AddService(typeof(T));
@@ -36,9 +38,13 @@ namespace AutoCli
 				}
 			}
 
+			var strategy = UnlessDefault(attr.MethodStrategy) ?? UnlessDefault(MethodStrategy) ?? MethodStrategy.Explicit;
+			var filter = strategy == MethodStrategy.Explicit
+				? (Func<MethodInfo, bool>)((MethodInfo x) => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
+				: (MethodInfo x) => true;
 			var methods = serviceType
 				.GetMethods()
-				.Where(x => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
+				.Where(filter)
 				.Select(x => new CliMethod(serviceType, attr.Name, x))
 				.ToArray();
 
@@ -83,6 +89,13 @@ namespace AutoCli
 
 			var service = serviceBuilder(matches[0].ServiceType);
 			matches[0].Execute(service, args);
+		}
+
+		private static MethodStrategy? UnlessDefault(MethodStrategy strategy)
+		{
+			return strategy != MethodStrategy.Default
+				? (MethodStrategy?)strategy
+				: null;
 		}
 	}
 }

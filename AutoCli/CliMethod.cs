@@ -21,7 +21,7 @@ namespace AutoCli
 			Service = service;
 
 			var methodAttr = info.GetCustomAttribute<CliMethodAttribute>(true);
-			if (methodAttr.Name != null)
+			if (methodAttr?.Name != null)
 			{
 				Method = methodAttr.Name;
 			}
