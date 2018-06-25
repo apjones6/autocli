@@ -9,14 +9,16 @@ namespace AutoCli
 	public class Cli
     {
 		private readonly List<CliMethod> methods = new List<CliMethod>();
-		private readonly Func<Type, object> serviceBuilder;
 
-		public Cli(Func<Type, object> serviceBuilder)
-		{
-			this.serviceBuilder = serviceBuilder ?? throw new ArgumentNullException(nameof(serviceBuilder));
-		}
-
+		private Resolver resolver;
+		
 		public MethodStrategy MethodStrategy { get; set; }
+
+		public Resolver Resolver
+		{
+			get { return resolver ?? (resolver = new Resolver(Activator.CreateInstance)); }
+			set { resolver = value; }
+		}
 
 		public void AddService<T>()
 		{
@@ -87,7 +89,7 @@ namespace AutoCli
 
 			Console.WriteLine("Executing...");
 
-			var service = serviceBuilder(matches[0].ServiceType);
+			var service = Resolver.Resolve(matches[0].ServiceType);
 			matches[0].Execute(service, args);
 		}
 

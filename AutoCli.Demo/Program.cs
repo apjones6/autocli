@@ -6,9 +6,10 @@ namespace AutoCli.Demo
 	{
 		static void Main(string[] args)
 		{
-			var cli = new Cli(GetService)
+			var cli = new Cli
 			{
-				MethodStrategy = MethodStrategy.All
+				MethodStrategy = MethodStrategy.All,
+				Resolver = (Resolver)GetService
 			};
 
 			cli.AddService<IGroupService>();
