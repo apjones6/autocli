@@ -10,10 +10,6 @@ namespace AutoCli
 	internal class CliMethod
 	{
 		private readonly MethodInfo info;
-		
-		private readonly string[] requiredParameters;
-		private readonly string[] optionalParameters;
-
 		private readonly bool isExtension;
 
 		public CliMethod(Type serviceType, string service, MethodInfo info)
@@ -45,11 +41,11 @@ namespace AutoCli
 				parameters = parameters.Skip(1).ToArray();
 			}
 
-			requiredParameters = parameters
+			RequiredParameters = parameters
 				.Where(x => !x.HasDefaultValue)
 				.Select(x => GetParameterName(x))
 				.ToArray();
-			optionalParameters = parameters
+			OptionalParameters = parameters
 				.Where(x => x.HasDefaultValue)
 				.Select(x => GetParameterName(x))
 				.ToArray();
@@ -58,6 +54,8 @@ namespace AutoCli
 		public Type ServiceType { get; }
 		public string Service { get; }
 		public string Method { get; }
+		public string[] RequiredParameters { get; }
+		public string[] OptionalParameters { get; }
 
 		public void Execute(object service, string[] args)
 		{
@@ -117,14 +115,14 @@ namespace AutoCli
 				.ToArray();
 
 			// All required parameters must exist to match
-			if (requiredParameters.Any(x => !paramNames.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
+			if (RequiredParameters.Any(x => !paramNames.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
 
 			var otherParamNames = paramNames
-				.Except(requiredParameters, StringComparer.OrdinalIgnoreCase)
+				.Except(RequiredParameters, StringComparer.OrdinalIgnoreCase)
 				.ToArray();
 
 			// All others must be in optional parameters
-			if (otherParamNames.Any(x => !optionalParameters.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
+			if (otherParamNames.Any(x => !OptionalParameters.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
 
 			return true;
 		}

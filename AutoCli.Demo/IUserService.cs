@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
-	[CliService("Users")]
+	[CliService("users")]
 	public interface IUserService
 	{
 		Task CreateAsync(User user);

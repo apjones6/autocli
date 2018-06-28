@@ -1,5 +1,4 @@
 ﻿using AutoCli.Attributes;
-using System;
 using System.Threading.Tasks;
 
 namespace AutoCli.Demo

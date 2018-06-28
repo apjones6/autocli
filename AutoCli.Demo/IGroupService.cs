@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
-	[CliService("Groups")]
+	[CliService("groups")]
 	public interface IGroupService
 	{
 		Task AddMemberAsync([CliParameter("group-id")] Guid groupId, [CliParameter("user-id")] Guid userId);

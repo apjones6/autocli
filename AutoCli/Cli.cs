@@ -75,23 +75,43 @@ namespace AutoCli
 			}
 			else if (matches.Length == 0)
 			{
-				Console.WriteLine("No candidates found for the provided arguments.");
-
-				// TODO: Also handle scenario where value matches nothing
-				if (args.Length == 0)
+				if (args.Length == 0 || !methods.Any(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)))
 				{
-					Console.WriteLine("\nAvailable services:");
+					Console.WriteLine("\nUsage: app SERVICE METHOD\n");
+
+					Console.WriteLine("Services:");
 					foreach (var name in methods.Select(x => x.Service).Distinct().OrderBy(x => x))
 					{
 						Console.WriteLine($"  {name}");
 					}
 				}
-				else if (args.Length == 1)
+				else if (args.Length == 1 || !methods.Any(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase) && x.Method.Equals(args[1], StringComparison.OrdinalIgnoreCase)))
 				{
-					Console.WriteLine($"\nAvailable \"{args[0]}\" methods:");
-					foreach (var name in methods.Where(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)).Select(x => x.Method).Distinct().OrderBy(x => x))
+					var serviceName = methods.First(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)).Service;
+					Console.WriteLine($"\nUsage: app {serviceName} METHOD\n");
+
+					Console.WriteLine($"Methods:");
+					foreach (var name in methods.Where(x => x.Service == serviceName).Select(x => x.Method).Distinct().OrderBy(x => x))
 					{
 						Console.WriteLine($"  {name}");
+					}
+				}
+				else
+				{
+					var serviceName = methods.First(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)).Service;
+					var methodName = methods.First(x => x.Service == serviceName && x.Method.Equals(args[1], StringComparison.OrdinalIgnoreCase)).Method;
+					Console.WriteLine($"\nUsage: app {serviceName} {methodName} params...\n");
+
+					Console.WriteLine($"Parameters:");
+					var methodOptions = methods
+						.Where(x => x.Service == serviceName && x.Method == methodName)
+						.ToArray();
+					foreach (var method in methodOptions)
+					{
+						Console.Write(" ");
+						foreach (var reqParam in method.RequiredParameters) Console.Write($" --{reqParam} <value>");
+						foreach (var optParam in method.OptionalParameters) Console.Write($" [--{optParam} <value>]");
+						Console.WriteLine();
 					}
 				}
 
