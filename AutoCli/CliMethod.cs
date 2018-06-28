@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace AutoCli
@@ -12,10 +13,13 @@ namespace AutoCli
 		
 		private readonly string[] requiredParameters;
 		private readonly string[] optionalParameters;
-		
+
+		private readonly bool isExtension;
+
 		public CliMethod(Type serviceType, string service, MethodInfo info)
 		{
 			this.info = info;
+			isExtension = info.IsDefined(typeof(ExtensionAttribute), false);
 
 			ServiceType = serviceType;
 			Service = service;
@@ -35,6 +39,11 @@ namespace AutoCli
 			}
 
 			var parameters = info.GetParameters();
+
+			if (isExtension)
+			{
+				parameters = parameters.Skip(1).ToArray();
+			}
 
 			requiredParameters = parameters
 				.Where(x => !x.HasDefaultValue)
@@ -56,8 +65,16 @@ namespace AutoCli
 			var parameters = new object[infos.Length];
 
 			int i = 0;
-			foreach (var info in infos)
+
+			if (isExtension)
 			{
+				parameters[0] = service;
+				++i;
+			}
+
+			for (; i < infos.Length; ++i)
+			{
+				var info = infos[i];
 				var name = GetParameterName(info);
 				var argIndex = Array.FindIndex(args, x => x.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
 				if (argIndex != -1 && args.Length > argIndex + 1)
@@ -76,8 +93,6 @@ namespace AutoCli
 				{
 					parameters[i] = info.HasDefaultValue ? info.DefaultValue : GetDefault(info.ParameterType);
 				}
-
-				++i;
 			}
 
 			var result = info.Invoke(service, parameters);

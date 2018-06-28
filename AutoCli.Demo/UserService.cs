@@ -1,5 +1,4 @@
-﻿using AutoCli.Attributes;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -13,15 +12,6 @@ namespace AutoCli.Demo
 	{
 		private const string FILENAME = "users.json";
 		private List<User> users = null;
-		
-		public async Task CreateAsync(string displayName, int? age = null)
-		{
-			await LoadAsync();
-
-			users.Add(new User { Age = age, DisplayName = displayName, Id = Guid.NewGuid() });
-
-			await SaveAsync();
-		}
 		
 		public async Task CreateAsync(User user)
 		{

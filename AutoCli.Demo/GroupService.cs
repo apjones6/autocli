@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AutoCli.Attributes;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AutoCli.Demo
 {
@@ -15,29 +14,48 @@ namespace AutoCli.Demo
 		private const string FILENAME = "groups.json";
 		private List<Group> groups = null;
 
-		public Task AddMemberAsync(Guid groupId, Guid userId)
+		public async Task AddMemberAsync(Guid groupId, Guid userId)
 		{
-			throw new NotImplementedException();
+			await LoadAsync();
+
+			var group = groups.Single(x => x.Id == groupId);
+			group.MemberIds = group.MemberIds != null
+				? group.MemberIds.Union(new[] { userId }).ToArray()
+				: group.MemberIds = new[] { userId };
+
+			await SaveAsync();
 		}
 		
-		public Task CreateAsync(string name, GroupVisibility visibilty = GroupVisibility.Authenticated)
+		public async Task CreateAsync(Group group)
 		{
-			throw new NotImplementedException();
+			await LoadAsync();
+
+			group.Id = Guid.NewGuid();
+			groups.Add(group);
+
+			await SaveAsync();
 		}
 		
-		public Task CreateAsync(Group group)
+		public async Task DeleteAsync(Guid groupId)
 		{
-			throw new NotImplementedException();
+			await LoadAsync();
+
+			groups.RemoveAll(x => x.Id == groupId);
+
+			await SaveAsync();
 		}
 		
-		public Task DeleteAsync(Guid groupId)
+		public async Task RemoveMemberAsync(Guid groupId, Guid userId)
 		{
-			throw new NotImplementedException();
-		}
-		
-		public Task RemoveMemberAsync(Guid groupId, Guid userId)
-		{
-			throw new NotImplementedException();
+			await LoadAsync();
+
+			var group = groups.Single(x => x.Id == groupId);
+			if (group.MemberIds != null)
+			{
+				group.MemberIds = group.MemberIds.Except(new[] { userId }).ToArray();
+			}
+
+			await SaveAsync();
 		}
 
 		private async Task LoadAsync()

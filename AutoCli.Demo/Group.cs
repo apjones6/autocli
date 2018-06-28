@@ -8,9 +8,14 @@ namespace AutoCli.Demo
 {
 	public class Group
 	{
+		public Group()
+		{
+			MemberIds = new Guid[0];
+		}
+
 		public Guid Id { get; set; }
 
-		public User[] Members { get; set; }
+		public Guid[] MemberIds { get; set; }
 
 		public string Name { get; set; }
 

@@ -13,7 +13,9 @@ namespace AutoCli.Demo
 			};
 
 			cli.AddService<IGroupService>();
+			cli.AddServiceExtensions<IGroupService>(typeof(ServiceExtensions));
 			cli.AddService<IUserService>();
+			cli.AddServiceExtensions<IUserService>(typeof(ServiceExtensions));
 
 			cli.Execute(args);
 		}

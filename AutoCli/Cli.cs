@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace AutoCli
 {
@@ -20,26 +21,36 @@ namespace AutoCli
 			set { resolver = value; }
 		}
 
+		public void AddServiceExtensions<T>(Type extensionsType)
+		{
+			AddServiceExtensions(typeof(T), extensionsType);
+		}
+
 		public void AddService<T>()
 		{
 			AddService(typeof(T));
 		}
 
+		public void AddServiceExtensions(Type serviceType, Type extensionsType)
+		{
+			var attr = GetServiceAttribute(serviceType);
+			var strategy = UnlessDefault(attr.MethodStrategy) ?? UnlessDefault(MethodStrategy) ?? MethodStrategy.Explicit;
+			var filter = strategy == MethodStrategy.Explicit
+				? (Func<MethodInfo, bool>)((MethodInfo x) => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
+				: (MethodInfo x) => true;
+			var methods = extensionsType
+				.GetMethods(BindingFlags.Static | BindingFlags.Public)
+				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false) && x.GetParameters()[0].ParameterType == serviceType)
+				.Where(filter)
+				.Select(x => new CliMethod(serviceType, attr.Name, x))
+				.ToArray();
+
+			this.methods.AddRange(methods);
+		}
+
 		public void AddService(Type serviceType)
 		{
-			if (serviceType == null) throw new ArgumentNullException(nameof(serviceType));
-			
-			// Find explicit attribute, else find on the interfaces
-			var attr = serviceType.GetCustomAttribute<CliServiceAttribute>(true);
-			if (attr == null)
-			{
-				attr = serviceType.GetInterfaces().Select(x => x.GetCustomAttribute<CliServiceAttribute>(true)).FirstOrDefault();
-				if (attr == null)
-				{
-					throw new ArgumentException("The service must be decorated with AutoCli.Attributes.CliServiceAttribute.", nameof(serviceType));
-				}
-			}
-
+			var attr = GetServiceAttribute(serviceType);
 			var strategy = UnlessDefault(attr.MethodStrategy) ?? UnlessDefault(MethodStrategy) ?? MethodStrategy.Explicit;
 			var filter = strategy == MethodStrategy.Explicit
 				? (Func<MethodInfo, bool>)((MethodInfo x) => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
@@ -91,6 +102,24 @@ namespace AutoCli
 
 			var service = Resolver.Resolve(matches[0].ServiceType);
 			matches[0].Execute(service, args);
+		}
+
+		private static CliServiceAttribute GetServiceAttribute(Type serviceType)
+		{
+			if (serviceType == null) throw new ArgumentNullException(nameof(serviceType));
+
+			// Find explicit attribute, else find on the interfaces
+			var attr = serviceType.GetCustomAttribute<CliServiceAttribute>(true);
+			if (attr == null)
+			{
+				attr = serviceType.GetInterfaces().Select(x => x.GetCustomAttribute<CliServiceAttribute>(true)).FirstOrDefault();
+				if (attr == null)
+				{
+					throw new ArgumentException("The service must be decorated with AutoCli.Attributes.CliServiceAttribute.", nameof(serviceType));
+				}
+			}
+
+			return attr;
 		}
 
 		private static MethodStrategy? UnlessDefault(MethodStrategy strategy)
