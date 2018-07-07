@@ -13,7 +13,7 @@ namespace AutoCli.Demo
 		private const string FILENAME = "users.json";
 		private List<User> users = null;
 		
-		public async Task CreateAsync(User user)
+		public async Task<User> CreateAsync(User user)
 		{
 			await LoadAsync();
 
@@ -21,6 +21,8 @@ namespace AutoCli.Demo
 			users.Add(user);
 
 			await SaveAsync();
+
+			return user;
 		}
 		
 		public async Task DeleteAsync(Guid userId)
@@ -30,6 +32,13 @@ namespace AutoCli.Demo
 			users.RemoveAll(x => x.Id == userId);
 
 			await SaveAsync();
+		}
+
+		public async Task<IEnumerable<User>> ListAsync()
+		{
+			await LoadAsync();
+
+			return users;
 		}
 
 		private async Task LoadAsync()

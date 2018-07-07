@@ -154,9 +154,20 @@ namespace AutoCli
 				return;
 			}
 
-			Console.WriteLine("Executing...");
+			object serviceInstance;
+			try
+			{
+				serviceInstance = Resolver.Resolve(matches[0].ServiceType);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine($"Unable to resolve service type: {matches[0].ServiceType}");
+				Console.WriteLine(ex);
+				Console.ResetColor();
+				return;
+			}
 
-			var serviceInstance = Resolver.Resolve(matches[0].ServiceType);
 			matches[0].Execute(serviceInstance, args);
 		}
 

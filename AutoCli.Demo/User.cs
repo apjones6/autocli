@@ -13,5 +13,10 @@ namespace AutoCli.Demo
 		public string DisplayName { get; set; }
 
 		public Guid Id { get; set; }
+
+		public override string ToString()
+		{
+			return $"{Id} ({DisplayName})";
+		}
 	}
 }

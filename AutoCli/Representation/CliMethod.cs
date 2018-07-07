@@ -1,5 +1,7 @@
 ﻿using AutoCli.Attributes;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -97,11 +99,23 @@ namespace AutoCli.Representation
 					parameters[i] = info.HasDefaultValue ? info.DefaultValue : GetDefault(info.ParameterType);
 				}
 			}
-
+			
 			var result = info.Invoke(service, parameters);
-			if (result is Task)
+
+			// Inspect the return type to output data for Task<T> and T return methods, but not for Task and void methods
+			// NOTE: Use declared type to safely handle Task<VoidTaskResult>
+			if (typeof(Task).IsAssignableFrom(info.ReturnType))
 			{
-				((Task)result).Wait();
+				var task = (Task)result;
+				task.Wait();
+				if (info.ReturnType.IsGenericType)
+				{
+					Output(info.ReturnType.GetProperty("Result").GetValue(task));
+				}
+			}
+			else if (info.ReturnType != typeof(void))
+			{
+				Output(result);
 			}
 		}
 
@@ -130,6 +144,21 @@ namespace AutoCli.Representation
 			if (otherParamNames.Any(x => !OptionalParameters.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
 
 			return true;
+		}
+
+		private static void Output(object result)
+		{
+			if (result is IEnumerable enumerable)
+			{
+				foreach (var entry in enumerable)
+				{
+					Console.WriteLine(entry);
+				}
+			}
+			else
+			{
+				Console.WriteLine(result);
+			}
 		}
 
 		private static string GetParameterName(ParameterInfo info)

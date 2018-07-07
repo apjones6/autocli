@@ -3,4 +3,5 @@
 * Add CLI service, method, and parameter attributes
 * Add CLI class to map services
 * Add CLI mapping of extension methods
+* Add CLI output data
 * Add demo

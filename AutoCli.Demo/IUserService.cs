@@ -1,5 +1,6 @@
 ﻿using AutoCli.Attributes;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AutoCli.Demo
@@ -7,9 +8,11 @@ namespace AutoCli.Demo
 	[CliService("users", Description = "Manage users")]
 	public interface IUserService
 	{
-		[CliMethod(Description = "Creates a user")]
-		Task CreateAsync(User user);
-		[CliMethod(Description = "Deletes a user")]
+		[CliMethod(Description = "Create a user")]
+		Task<User> CreateAsync(User user);
+		[CliMethod(Description = "Delete a user")]
 		Task DeleteAsync([CliParameter("user-id")] Guid userId);
+		[CliMethod(Description = "List users")]
+		Task<IEnumerable<User>> ListAsync();
 	}
 }
