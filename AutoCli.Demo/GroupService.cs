@@ -26,7 +26,7 @@ namespace AutoCli.Demo
 			await SaveAsync();
 		}
 		
-		public async Task CreateAsync(Group group)
+		public async Task<Group> CreateAsync(Group group)
 		{
 			await LoadAsync();
 
@@ -34,6 +34,8 @@ namespace AutoCli.Demo
 			groups.Add(group);
 
 			await SaveAsync();
+
+			return group;
 		}
 		
 		public async Task DeleteAsync(Guid groupId)
@@ -44,7 +46,21 @@ namespace AutoCli.Demo
 
 			await SaveAsync();
 		}
-		
+
+		public async Task<Group> GetAsync(Guid groupId)
+		{
+			await LoadAsync();
+
+			return groups.FirstOrDefault(x => x.Id == groupId);
+		}
+
+		public async Task<IEnumerable<Group>> ListAsync()
+		{
+			await LoadAsync();
+
+			return groups;
+		}
+
 		public async Task RemoveMemberAsync(Guid groupId, Guid userId)
 		{
 			await LoadAsync();

@@ -1,7 +1,5 @@
 ﻿using AutoCli.Attributes;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -110,12 +108,16 @@ namespace AutoCli.Representation
 				task.Wait();
 				if (info.ReturnType.IsGenericType)
 				{
-					Output(info.ReturnType.GetProperty("Result").GetValue(task));
+					var declaredType = info.ReturnType.GetGenericArguments()[0];
+					var taskResult = info.ReturnType.GetProperty("Result").GetValue(task);
+					var output = new CliOutput(taskResult, declaredType);
+					output.Write();
 				}
 			}
 			else if (info.ReturnType != typeof(void))
 			{
-				Output(result);
+				var output = new CliOutput(result, info.ReturnType);
+				output.Write();
 			}
 		}
 
@@ -145,22 +147,7 @@ namespace AutoCli.Representation
 
 			return true;
 		}
-
-		private static void Output(object result)
-		{
-			if (result is IEnumerable enumerable)
-			{
-				foreach (var entry in enumerable)
-				{
-					Console.WriteLine(entry);
-				}
-			}
-			else
-			{
-				Console.WriteLine(result);
-			}
-		}
-
+		
 		private static string GetParameterName(ParameterInfo info)
 		{
 			var attr = info.GetCustomAttribute<CliParameterAttribute>(true);
@@ -182,6 +169,18 @@ namespace AutoCli.Representation
 				if (result.Item1)
 				{
 					return result;
+				}
+			}
+
+			if (type.IsEnum)
+			{
+				try
+				{
+					return Tuple.Create(true, Enum.Parse(type, input, true));
+				}
+				catch (Exception)
+				{
+					return new Tuple<bool, object>(false, null);
 				}
 			}
 

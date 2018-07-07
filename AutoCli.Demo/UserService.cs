@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,6 +33,13 @@ namespace AutoCli.Demo
 			users.RemoveAll(x => x.Id == userId);
 
 			await SaveAsync();
+		}
+
+		public async Task<User> GetAsync(Guid userId)
+		{
+			await LoadAsync();
+
+			return users.FirstOrDefault(x => x.Id == userId);
 		}
 
 		public async Task<IEnumerable<User>> ListAsync()

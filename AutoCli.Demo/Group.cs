@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AutoCli.Attributes;
+using System;
 
 namespace AutoCli.Demo
 {
@@ -13,12 +10,20 @@ namespace AutoCli.Demo
 			MemberIds = new Guid[0];
 		}
 
+		[CliOutput(Key = true)]
 		public Guid Id { get; set; }
 
 		public Guid[] MemberIds { get; set; }
 
+		[CliOutput(Order = 1)]
 		public string Name { get; set; }
 
+		[CliOutput(Order = 2)]
 		public GroupVisibility Visibility { get; set; }
+
+		public override string ToString()
+		{
+			return $"{Id} ({Name})";
+		}
 	}
 }

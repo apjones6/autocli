@@ -10,8 +10,13 @@ namespace AutoCli.Demo
 	{
 		[CliMethod(Description = "Create a user")]
 		Task<User> CreateAsync(User user);
+
 		[CliMethod(Description = "Delete a user")]
 		Task DeleteAsync([CliParameter("user-id")] Guid userId);
+
+		[CliMethod(Description = "Gets a user")]
+		Task<User> GetAsync([CliParameter("user-id")] Guid userId);
+
 		[CliMethod(Description = "List users")]
 		Task<IEnumerable<User>> ListAsync();
 	}
