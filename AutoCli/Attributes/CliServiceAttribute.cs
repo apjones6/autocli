@@ -10,6 +10,8 @@ namespace AutoCli.Attributes
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("The name cannot be null, empty, or whitespace", nameof(name));
 			Name = name;
 		}
+		
+		public string Description { get; set; }
 
 		public MethodStrategy MethodStrategy { get; set; }
 

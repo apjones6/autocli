@@ -7,7 +7,7 @@
     <ProjectGuid>{104482E4-EEE0-49C6-AB13-6CB2F4734458}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>AutoCli.Demo</RootNamespace>
-    <AssemblyName>AutoCli.Demo</AssemblyName>
+    <AssemblyName>demoapp</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

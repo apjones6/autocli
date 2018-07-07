@@ -15,6 +15,8 @@ namespace AutoCli.Attributes
 			Name = name;
 		}
 
+		public string Description { get; set; }
+
 		public string Name { get; }
     }
 }

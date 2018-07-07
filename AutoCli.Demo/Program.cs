@@ -8,8 +8,9 @@ namespace AutoCli.Demo
 		{
 			var cli = new Cli
 			{
+				Description = "A demo CLI application for the AutoCli package features",
 				MethodStrategy = MethodStrategy.All,
-				Resolver = (Resolver)GetService
+				Resolver = new Resolver(GetService)
 			};
 
 			cli.AddService<IGroupService>();

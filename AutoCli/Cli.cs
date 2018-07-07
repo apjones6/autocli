@@ -1,6 +1,9 @@
 ﻿using AutoCli.Attributes;
+using AutoCli.Representation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -12,6 +15,8 @@ namespace AutoCli
 		private readonly List<CliMethod> methods = new List<CliMethod>();
 
 		private Resolver resolver;
+
+		public string Description { get; set; }
 		
 		public MethodStrategy MethodStrategy { get; set; }
 
@@ -42,7 +47,7 @@ namespace AutoCli
 				.GetMethods(BindingFlags.Static | BindingFlags.Public)
 				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false) && x.GetParameters()[0].ParameterType == serviceType)
 				.Where(filter)
-				.Select(x => new CliMethod(serviceType, attr.Name, x))
+				.Select(x => new CliMethod(serviceType, attr, x))
 				.ToArray();
 
 			this.methods.AddRange(methods);
@@ -58,7 +63,7 @@ namespace AutoCli
 			var methods = serviceType
 				.GetMethods()
 				.Where(filter)
-				.Select(x => new CliMethod(serviceType, attr.Name, x))
+				.Select(x => new CliMethod(serviceType, attr, x))
 				.ToArray();
 
 			this.methods.AddRange(methods);
@@ -66,6 +71,19 @@ namespace AutoCli
 
 		public void Execute(string[] args)
 		{
+			var assembly = Assembly.GetEntryAssembly();
+			var app = Path.GetFileName(assembly.Location);
+
+			if (args.Length == 1)
+			{
+				if (args[0] == "-v" || args[0] == "--version")
+				{
+					var version = FileVersionInfo.GetVersionInfo(assembly.Location);
+					Console.WriteLine($"{app} version {version.FileVersion}");
+					return;
+				}
+			}
+
 			var matches = methods.Where(x => x.IsMatch(args)).ToArray();
 
 			if (matches.Length > 1)
@@ -77,40 +95,58 @@ namespace AutoCli
 			{
 				if (args.Length == 0 || !methods.Any(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)))
 				{
-					Console.WriteLine("\nUsage: app SERVICE METHOD\n");
+					Console.WriteLine($"\nUsage: {app} SERVICE METHOD\n");
+
+					if (!string.IsNullOrWhiteSpace(Description))
+					{
+						Console.WriteLine($"{Description}\n");
+					}
 
 					Console.WriteLine("Services:");
-					foreach (var name in methods.Select(x => x.Service).Distinct().OrderBy(x => x))
+					var padding = methods.Max(x => x.Service.Length);
+					foreach (var s in methods.GroupBy(x => x.Service).Select(x => x.First()).OrderBy(x => x.Service))
 					{
-						Console.WriteLine($"  {name}");
+						// TODO: Wrap description based on console width
+						Console.WriteLine($"  {s.Service.PadRight(padding)}  {s.ServiceDescription}");
 					}
 				}
 				else if (args.Length == 1 || !methods.Any(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase) && x.Method.Equals(args[1], StringComparison.OrdinalIgnoreCase)))
 				{
-					var serviceName = methods.First(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)).Service;
-					Console.WriteLine($"\nUsage: app {serviceName} METHOD\n");
+					var method = methods.First(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+					Console.WriteLine($"\nUsage: {app} {method.Service} METHOD\n");
+
+					if (!string.IsNullOrWhiteSpace(method.ServiceDescription))
+					{
+						Console.WriteLine($"{method.ServiceDescription}\n");
+					}
 
 					Console.WriteLine($"Methods:");
-					foreach (var name in methods.Where(x => x.Service == serviceName).Select(x => x.Method).Distinct().OrderBy(x => x))
+					var filteredMethods = methods.Where(x => x.Service == method.Service);
+					var padding = filteredMethods.Max(x => x.Method.Length);
+					foreach (var m in filteredMethods.GroupBy(x => x.Method).Select(x => x.First()).OrderBy(x => x.Method))
 					{
-						Console.WriteLine($"  {name}");
+						Console.WriteLine($"  {m.Method.PadRight(padding)}  {m.MethodDescription}");
 					}
 				}
 				else
 				{
-					var serviceName = methods.First(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase)).Service;
-					var methodName = methods.First(x => x.Service == serviceName && x.Method.Equals(args[1], StringComparison.OrdinalIgnoreCase)).Method;
-					Console.WriteLine($"\nUsage: app {serviceName} {methodName} params...\n");
+					var method = methods.First(x => x.Service.Equals(args[0], StringComparison.OrdinalIgnoreCase) && x.Method.Equals(args[1], StringComparison.OrdinalIgnoreCase));
+					Console.WriteLine($"\nUsage: {app} {method.Service} {method.Method} params...\n");
+
+					if (!string.IsNullOrWhiteSpace(method.MethodDescription))
+					{
+						Console.WriteLine($"{method.MethodDescription}\n");
+					}
 
 					Console.WriteLine($"Parameters:");
 					var methodOptions = methods
-						.Where(x => x.Service == serviceName && x.Method == methodName)
+						.Where(x => x.Service == method.Service && x.Method == method.Method)
 						.ToArray();
-					foreach (var method in methodOptions)
+					foreach (var m in methodOptions)
 					{
 						Console.Write(" ");
-						foreach (var reqParam in method.RequiredParameters) Console.Write($" --{reqParam} <value>");
-						foreach (var optParam in method.OptionalParameters) Console.Write($" [--{optParam} <value>]");
+						foreach (var reqParam in m.RequiredParameters) Console.Write($" --{reqParam} <value>");
+						foreach (var optParam in m.OptionalParameters) Console.Write($" [--{optParam} <value>]");
 						Console.WriteLine();
 					}
 				}
@@ -120,8 +156,8 @@ namespace AutoCli
 
 			Console.WriteLine("Executing...");
 
-			var service = Resolver.Resolve(matches[0].ServiceType);
-			matches[0].Execute(service, args);
+			var serviceInstance = Resolver.Resolve(matches[0].ServiceType);
+			matches[0].Execute(serviceInstance, args);
 		}
 
 		private static CliServiceAttribute GetServiceAttribute(Type serviceType)

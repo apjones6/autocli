@@ -5,25 +5,28 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace AutoCli
+namespace AutoCli.Representation
 {
 	internal class CliMethod
 	{
+		private readonly CliServiceAttribute serviceAttribute;
+		private readonly CliMethodAttribute methodAttribute;
 		private readonly MethodInfo info;
 		private readonly bool isExtension;
 
-		public CliMethod(Type serviceType, string service, MethodInfo info)
+		public CliMethod(Type serviceType, CliServiceAttribute serviceAttribute, MethodInfo info)
 		{
+			this.serviceAttribute = serviceAttribute;
 			this.info = info;
+
 			isExtension = info.IsDefined(typeof(ExtensionAttribute), false);
 
 			ServiceType = serviceType;
-			Service = service;
 
-			var methodAttr = info.GetCustomAttribute<CliMethodAttribute>(true);
-			if (methodAttr?.Name != null)
+			methodAttribute = info.GetCustomAttribute<CliMethodAttribute>(true);
+			if (methodAttribute?.Name != null)
 			{
-				Method = methodAttr.Name;
+				Method = methodAttribute.Name;
 			}
 			else if (info.Name.EndsWith("Async"))
 			{
@@ -52,8 +55,10 @@ namespace AutoCli
 		}
 
 		public Type ServiceType { get; }
-		public string Service { get; }
+		public string Service => serviceAttribute.Name;
+		public string ServiceDescription => serviceAttribute.Description;
 		public string Method { get; }
+		public string MethodDescription => methodAttribute?.Description;
 		public string[] RequiredParameters { get; }
 		public string[] OptionalParameters { get; }
 
