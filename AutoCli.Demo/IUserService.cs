@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
-	[CliService("users", Description = "Manage users")]
+	[CliService("Users", Description = "Manage users")]
 	public interface IUserService
 	{
 		[CliMethod(Description = "Create a user")]
@@ -14,7 +14,7 @@ namespace AutoCli.Demo
 		[CliMethod(Description = "Delete a user")]
 		Task DeleteAsync([CliParameter("user-id")] Guid userId);
 
-		[CliMethod(Description = "Gets a user")]
+		[CliMethod(Description = "Get a user")]
 		Task<User> GetAsync([CliParameter("user-id")] Guid userId);
 
 		[CliMethod(Description = "List users")]

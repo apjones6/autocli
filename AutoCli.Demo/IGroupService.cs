@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
-	[CliService("groups", Description = "Manage groups")]
+	[CliService("Groups", Description = "Manage groups")]
 	public interface IGroupService
 	{
 		[CliMethod(Description = "Add a user to the group")]
@@ -17,7 +17,7 @@ namespace AutoCli.Demo
 		[CliMethod(Description = "Delete a group")]
 		Task DeleteAsync([CliParameter("group-id")] Guid groupId);
 
-		[CliMethod(Description = "Gets a group")]
+		[CliMethod(Description = "Get a group")]
 		Task<Group> GetAsync([CliParameter("group-id")] Guid groupId);
 
 		[CliMethod(Description = "List groups")]

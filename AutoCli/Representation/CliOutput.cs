@@ -12,6 +12,7 @@ namespace AutoCli.Representation
 		private readonly object result;
 		private readonly Type declaredType;
 
+		private List<List<string>> cells;
 		private bool initialized;
 		private bool isTable;
 		private OutputProp[] props;
@@ -32,20 +33,6 @@ namespace AutoCli.Representation
 			{
 				if (isTable)
 				{
-					// Table of cells, structured cells[row][col]
-					var cells = new List<List<string>>
-					{
-						props.Select(x => x.Info.Name.ToUpper()).ToList()
-					};
-
-					// Add rows for all the values
-					foreach (var item in (IEnumerable)result)
-					{
-						cells.Add(props
-							.Select(x => x.Info.GetValue(item)?.ToString())
-							.ToList());
-					}
-
 					// Find the width for each column
 					var widths = cells[0].Select((x, i) => cells.Select(r => r[i]).Max(r => r?.Length ?? 0)).ToArray();
 					
@@ -54,7 +41,7 @@ namespace AutoCli.Representation
 					{
 						for (var j = 0; j < cells[i].Count; ++j)
 						{
-							Console.Write((cells[i][j] ?? string.Empty).PadRight(widths[j] + 2));
+							Console.Write(" " + (cells[i][j] ?? string.Empty).PadRight(widths[j] + 2));
 						}
 
 						Console.WriteLine();
@@ -62,11 +49,11 @@ namespace AutoCli.Representation
 				}
 				else
 				{
-					var padding = props.Max(x => x.Info.Name.Length + 1);
-					foreach (var prop in props)
+					var width = cells[0].Max(x => x.Length);
+					var len = cells[0].Count;
+					for (var i = 0; i < len; ++i)
 					{
-						var header = prop.Info.Name + ":";
-						Console.WriteLine($"  {header.PadRight(padding)}  {prop.Info.GetValue(result)}");
+						Console.WriteLine($" {cells[0][i].PadLeft(width)}:  {cells[1][i]}");
 					}
 				}
 			}
@@ -105,6 +92,32 @@ namespace AutoCli.Representation
 			else if (declaredType.IsClass)
 			{
 				props = GetProps(declaredType);
+			}
+
+			if (props != null)
+			{
+				// Table of cells, structured cells[row][col]
+				cells = new List<List<string>>
+				{
+					props.Select(x => x.Info.Name.ToUpper()).ToList()
+				};
+
+				if (isTable)
+				{
+					// Add rows for all the values
+					foreach (var item in (IEnumerable)result)
+					{
+						cells.Add(props
+							.Select(x => x.Info.GetValue(item)?.ToString())
+							.ToList());
+					}
+				}
+				else
+				{
+					cells.Add(props
+						.Select(x => x.Info.GetValue(result)?.ToString())
+						.ToList());
+				}
 			}
 		}
 
