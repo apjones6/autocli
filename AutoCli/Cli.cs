@@ -13,78 +13,82 @@ namespace AutoCli
 	public class Cli
     {
 		private readonly List<CliMethod> methods = new List<CliMethod>();
+		private readonly ISet<Type> serviceTypes = new HashSet<Type>();
 
 		private Resolver resolver;
 
 		public string Description { get; set; }
 		
-		public MethodStrategy MethodStrategy { get; set; }
-
 		public Resolver Resolver
 		{
 			get { return resolver ?? (resolver = new Resolver(Activator.CreateInstance)); }
 			set { resolver = value; }
 		}
 
-		public void AddServiceExtensions<T>(Type extensionsType)
+		public Cli AddExtensions()
 		{
-			AddServiceExtensions(typeof(T), extensionsType);
-		}
-
-		public void AddService<T>()
-		{
-			AddService(typeof(T));
-		}
-
-		public void AddServiceExtensions(Type serviceType, Type extensionsType)
-		{
-			var attr = GetServiceAttribute(serviceType);
-			var strategy = UnlessDefault(attr.MethodStrategy) ?? UnlessDefault(MethodStrategy) ?? MethodStrategy.Explicit;
-			var filter = strategy == MethodStrategy.Explicit
-				? (Func<MethodInfo, bool>)((MethodInfo x) => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
-				: (MethodInfo x) => true;
-			var methods = extensionsType
-				.GetMethods(BindingFlags.Static | BindingFlags.Public)
-				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false) && x.GetParameters()[0].ParameterType == serviceType)
-				.Where(filter)
-				.Select(x => new CliMethod(serviceType, attr, x))
+			var serviceAttributes = serviceTypes.ToDictionary(x => x, x => GetServiceAttribute(x));
+			var methods = AppDomain.CurrentDomain
+				.GetAssemblies()
+				.AsParallel()
+				.SelectMany(x => x.GetExportedTypes().Where(t => t.GetCustomAttribute<CliExtensionsAttribute>() != null))
+				.SelectMany(x => x.GetMethods(BindingFlags.Static | BindingFlags.Public))
+				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false))
+				.Select(x => new { Method = x, Parameters = x.GetParameters() })
+				.Where(x => x.Parameters.Length > 0 && serviceTypes.Contains(x.Parameters[0].ParameterType))
+				.Select(x => new CliMethod(x.Parameters[0].ParameterType, serviceAttributes[x.Parameters[0].ParameterType], x.Method))
 				.ToArray();
 
 			this.methods.AddRange(methods);
-		}
 
-		public void AddService(Type serviceType)
+			return this;
+		}
+		
+		public Cli AddService<T>()
+		{
+			return AddService(typeof(T));
+		}
+		
+		public Cli AddService(Type serviceType)
 		{
 			var attr = GetServiceAttribute(serviceType);
-			var strategy = UnlessDefault(attr.MethodStrategy) ?? UnlessDefault(MethodStrategy) ?? MethodStrategy.Explicit;
-			var filter = strategy == MethodStrategy.Explicit
-				? (Func<MethodInfo, bool>)((MethodInfo x) => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
-				: (MethodInfo x) => true;
-			var methods = serviceType
+			var cliMethods = serviceType
 				.GetMethods()
-				.Where(filter)
+				.Where(x => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
 				.Select(x => new CliMethod(serviceType, attr, x))
 				.ToArray();
 
-			this.methods.AddRange(methods);
+			serviceTypes.Add(serviceType);
+			methods.AddRange(cliMethods);
+
+			return this;
 		}
 
+		public static Cli Builder => new Cli();
+		
 		public void Execute(string[] args)
 		{
 			var assembly = Assembly.GetEntryAssembly();
-			var app = Path.GetFileName(assembly.Location);
+			var app = Path.GetFileNameWithoutExtension(assembly.Location);
+			var showHelp = false;
 
 			if (args.Length == 1)
 			{
-				if (args[0] == "-v" || args[0] == "--version")
+				if (args[0] == "--help")
+				{
+					showHelp = true;
+				}
+				else if (args[0] == "-v" || args[0] == "--version")
 				{
 					var version = FileVersionInfo.GetVersionInfo(assembly.Location);
 					Console.WriteLine($"{app} version {version.FileVersion}");
 					return;
 				}
 			}
-
-			var matches = methods.Where(x => x.IsMatch(args)).ToArray();
+			
+			var matches = !showHelp
+				? methods.Where(x => x.IsMatch(args)).ToArray()
+				: new CliMethod[0];
 
 			if (matches.Length > 1)
 			{
@@ -101,6 +105,11 @@ namespace AutoCli
 					{
 						Console.WriteLine($"{Description}\n");
 					}
+
+					Console.WriteLine("Options:");
+					Console.WriteLine("      --help     Show help information");
+					Console.WriteLine("  -v, --version  Show version");
+					Console.WriteLine();
 
 					Console.WriteLine("Services:");
 					var padding = methods.Max(x => x.Service.Length);
@@ -171,6 +180,24 @@ namespace AutoCli
 			matches[0].Execute(serviceInstance, args);
 		}
 
+		public Cli SetDescription(string description)
+		{
+			Description = description;
+			return this;
+		}
+		
+		public Cli SetResolver(Func<Type, object> resolver)
+		{
+			Resolver = new Resolver(resolver);
+			return this;
+		}
+
+		public Cli SetResolver(Resolver resolver)
+		{
+			Resolver = resolver;
+			return this;
+		}
+
 		private static CliServiceAttribute GetServiceAttribute(Type serviceType)
 		{
 			if (serviceType == null) throw new ArgumentNullException(nameof(serviceType));
@@ -187,13 +214,6 @@ namespace AutoCli
 			}
 
 			return attr;
-		}
-
-		private static MethodStrategy? UnlessDefault(MethodStrategy strategy)
-		{
-			return strategy != MethodStrategy.Default
-				? (MethodStrategy?)strategy
-				: null;
 		}
 	}
 }

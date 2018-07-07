@@ -12,9 +12,7 @@ namespace AutoCli.Attributes
 		}
 		
 		public string Description { get; set; }
-
-		public MethodStrategy MethodStrategy { get; set; }
-
+		
 		public string Name { get; }
     }
 }

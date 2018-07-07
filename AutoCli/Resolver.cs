@@ -15,10 +15,5 @@ namespace AutoCli
 		{
 			return func(serviceType);
 		}
-
-		public static implicit operator Resolver(Func<Type, object> func)
-		{
-			return new Resolver(func);
-		}
 	}
 }

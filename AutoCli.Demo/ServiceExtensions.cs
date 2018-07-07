@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
+	[CliExtensions]
 	public static class ServiceExtensions
 	{
 		[CliMethod(Description = "Create a user")]
