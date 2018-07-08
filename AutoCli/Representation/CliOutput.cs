@@ -29,6 +29,8 @@ namespace AutoCli.Representation
 
 			Initialize();
 
+			Console.WriteLine();
+
 			if (props != null)
 			{
 				if (isTable)

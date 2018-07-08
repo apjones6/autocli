@@ -9,14 +9,14 @@ namespace AutoCli.Demo
 	[CliExtensions]
 	public static class ServiceExtensions
 	{
-		[CliMethod(Description = "Create a user")]
+		[CliMethod]
 		public static async Task<User> CreateAsync(this IUserService userService, [CliParameter("name")] string displayName, int? age = null)
 		{
 			var user = new User { Age = age, DisplayName = displayName };
 			return await userService.CreateAsync(user);
 		}
 
-		[CliMethod(Description = "Create a group")]
+		[CliMethod]
 		public static async Task<Group> CreateAsync(this IGroupService groupService, string name, GroupVisibility visibility = GroupVisibility.Authenticated)
 		{
 			var group = new Group { Name = name, Visibility = visibility };

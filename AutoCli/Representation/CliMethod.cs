@@ -9,26 +9,37 @@ namespace AutoCli.Representation
 	internal class CliMethod
 	{
 		private readonly CliService service;
-		private readonly CliMethodAttribute methodAttribute;
 		private readonly List<CliParameters> parameters;
-		private readonly MethodInfo info;
 
 		public CliMethod(CliService service, MethodInfo info)
 		{
 			this.service = service ?? throw new ArgumentNullException(nameof(service));
-			this.info = info ?? throw new ArgumentNullException(nameof(info));
 			
-			methodAttribute = info.GetCustomAttribute<CliMethodAttribute>(true);
 			parameters = new List<CliParameters>();
 
+			Description = info.GetCustomAttribute<CliMethodAttribute>(true)?.Description;
 			Name = GetMethodName(info);
 		}
 		
-		public string Description => methodAttribute?.Description;
+		public string Description { get; private set; }
 		public string Name { get; }
 
 		public void AddMethod(MethodInfo info)
 		{
+			var description = info.GetCustomAttribute<CliMethodAttribute>(true)?.Description;
+			if (string.IsNullOrWhiteSpace(Description))
+			{
+				Description = description;
+			}
+			else if (!string.IsNullOrWhiteSpace(description) && Description != description)
+			{
+				Console.ForegroundColor = ConsoleColor.Yellow;
+				Console.WriteLine($"Multiple descriptions found for method \"{Name}\":");
+				Console.WriteLine($"  {Description}");
+				Console.WriteLine($"  {description}");
+				Console.ResetColor();
+			}
+
 			parameters.Add(new CliParameters(this, info));
 		}
 
@@ -85,12 +96,9 @@ namespace AutoCli.Representation
 			}
 
 			Console.WriteLine($"Parameters:");
-			foreach (var method in parameters)
+			foreach (var p in parameters)
 			{
-				Console.Write(" ");
-				foreach (var reqParam in method.RequiredParameters) Console.Write($" --{reqParam} <value>");
-				foreach (var optParam in method.OptionalParameters) Console.Write($" [--{optParam} <value>]");
-				Console.WriteLine();
+				p.ShowHelp();
 			}
 		}
 	}
