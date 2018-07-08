@@ -2,7 +2,7 @@
 
 namespace AutoCli.Attributes
 {
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     public class CliServiceAttribute : Attribute
     {
 		public CliServiceAttribute(string name)

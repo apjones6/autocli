@@ -1,215 +1,97 @@
 ﻿using AutoCli.Attributes;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace AutoCli.Representation
 {
 	internal class CliMethod
 	{
-		private readonly CliServiceAttribute serviceAttribute;
+		private readonly CliService service;
 		private readonly CliMethodAttribute methodAttribute;
+		private readonly List<CliParameters> parameters;
 		private readonly MethodInfo info;
-		private readonly bool isExtension;
 
-		public CliMethod(Type serviceType, CliServiceAttribute serviceAttribute, MethodInfo info)
+		public CliMethod(CliService service, MethodInfo info)
 		{
-			this.serviceAttribute = serviceAttribute;
-			this.info = info;
-
-			isExtension = info.IsDefined(typeof(ExtensionAttribute), false);
-
-			ServiceType = serviceType;
-
-			methodAttribute = info.GetCustomAttribute<CliMethodAttribute>(true);
-			if (methodAttribute?.Name != null)
-			{
-				Method = methodAttribute.Name;
-			}
-			else if (info.Name.EndsWith("Async"))
-			{
-				Method = info.Name.Substring(0, info.Name.Length - 5);
-			}
-			else
-			{
-				Method = info.Name;
-			}
-
-			var parameters = info.GetParameters();
-
-			if (isExtension)
-			{
-				parameters = parameters.Skip(1).ToArray();
-			}
-
-			RequiredParameters = parameters
-				.Where(x => !x.HasDefaultValue)
-				.Select(x => GetParameterName(x))
-				.ToArray();
-			OptionalParameters = parameters
-				.Where(x => x.HasDefaultValue)
-				.Select(x => GetParameterName(x))
-				.ToArray();
-		}
-
-		public Type ServiceType { get; }
-		public string Service => serviceAttribute.Name;
-		public string ServiceDescription => serviceAttribute.Description;
-		public string Method { get; }
-		public string MethodDescription => methodAttribute?.Description;
-		public string[] RequiredParameters { get; }
-		public string[] OptionalParameters { get; }
-
-		public void Execute(object service, string[] args)
-		{
-			var infos = info.GetParameters();
-			var parameters = new object[infos.Length];
-
-			int i = 0;
-
-			if (isExtension)
-			{
-				parameters[0] = service;
-				++i;
-			}
-
-			for (; i < infos.Length; ++i)
-			{
-				var info = infos[i];
-				var name = GetParameterName(info);
-				var argIndex = Array.FindIndex(args, x => x.Equals($"--{name}", StringComparison.OrdinalIgnoreCase));
-				if (argIndex != -1 && args.Length > argIndex + 1)
-				{
-					var paramValue = ConvertType(args[argIndex + 1], info.ParameterType);
-					if (paramValue.Item1)
-					{
-						parameters[i] = paramValue.Item2;
-					}
-					else
-					{
-						parameters[i] = GetDefault(info.ParameterType);
-					}
-				}
-				else
-				{
-					parameters[i] = info.HasDefaultValue ? info.DefaultValue : GetDefault(info.ParameterType);
-				}
-			}
+			this.service = service ?? throw new ArgumentNullException(nameof(service));
+			this.info = info ?? throw new ArgumentNullException(nameof(info));
 			
-			var result = info.Invoke(service, parameters);
+			methodAttribute = info.GetCustomAttribute<CliMethodAttribute>(true);
+			parameters = new List<CliParameters>();
 
-			// Inspect the return type to output data for Task<T> and T return methods, but not for Task and void methods
-			// NOTE: Use declared type to safely handle Task<VoidTaskResult>
-			if (typeof(Task).IsAssignableFrom(info.ReturnType))
-			{
-				var task = (Task)result;
-				task.Wait();
-				if (info.ReturnType.IsGenericType)
-				{
-					var declaredType = info.ReturnType.GetGenericArguments()[0];
-					var taskResult = info.ReturnType.GetProperty("Result").GetValue(task);
-					var output = new CliOutput(taskResult, declaredType);
-					output.Write();
-				}
-			}
-			else if (info.ReturnType != typeof(void))
-			{
-				var output = new CliOutput(result, info.ReturnType);
-				output.Write();
-			}
+			Name = GetMethodName(info);
+		}
+		
+		public string Description => methodAttribute?.Description;
+		public string Name { get; }
+
+		public void AddMethod(MethodInfo info)
+		{
+			parameters.Add(new CliParameters(this, info));
 		}
 
-		public bool IsMatch(string[] args)
+		public bool Execute(string[] args)
 		{
-			if (args == null || args.Length < 2) return false;
+			if (!args[0].Equals(Name, StringComparison.OrdinalIgnoreCase)) return false;
 
-			if (!args[0].Equals(Service, StringComparison.OrdinalIgnoreCase)) return false;
-			if (!args[1].Equals(Method, StringComparison.OrdinalIgnoreCase)) return false;
+			args = args.Skip(1).ToArray();
 
-			// TODO: Include value and check if convertable to parameter type
-			var paramNames = args
-				.Skip(2)
-				.Where(x => x.StartsWith("--"))
-				.Select(x => x.Substring(2))
-				.ToArray();
+			var handled = false;
+			var done = parameters.FirstOrDefault(x => x.Execute(args));
+			if (done != null)
+			{
+				handled = true;
+			}
 
-			// All required parameters must exist to match
-			if (RequiredParameters.Any(x => !paramNames.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
-
-			var otherParamNames = paramNames
-				.Except(RequiredParameters, StringComparer.OrdinalIgnoreCase)
-				.ToArray();
-
-			// All others must be in optional parameters
-			if (otherParamNames.Any(x => !OptionalParameters.Contains(x, StringComparer.OrdinalIgnoreCase))) return false;
+			if (!handled)
+			{
+				ShowHelp();
+			}
 
 			return true;
 		}
-		
-		private static string GetParameterName(ParameterInfo info)
-		{
-			var attr = info.GetCustomAttribute<CliParameterAttribute>(true);
-			if (attr != null && attr.Name != null)
-			{
-				return attr.Name;
-			}
 
-			return info.Name;
+		public object GetInstance()
+		{
+			return service.GetInstance();
 		}
 
-		private static Tuple<bool, object> ConvertType(string input, Type type)
+		public static string GetMethodName(MethodInfo info)
 		{
-			Tuple<bool, object> result;
-
-			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+			var attribute = info.GetCustomAttribute<CliMethodAttribute>(true);
+			if (attribute?.Name != null)
 			{
-				result = ConvertType(input, type.GetGenericArguments()[0]);
-				if (result.Item1)
-				{
-					return result;
-				}
+				return attribute.Name;
 			}
-
-			if (type.IsEnum)
+			else if (info.Name.EndsWith("Async"))
 			{
-				try
-				{
-					return Tuple.Create(true, Enum.Parse(type, input, true));
-				}
-				catch (Exception)
-				{
-					return new Tuple<bool, object>(false, null);
-				}
+				return info.Name.Substring(0, info.Name.Length - 5);
 			}
-
-			if (type == typeof(Guid))
+			else
 			{
-				if (Guid.TryParse(input, out var guid))
-				{
-					return Tuple.Create(true, (object)guid);
-				}
-			}
-
-			try
-			{
-				return Tuple.Create(true, Convert.ChangeType(input, type));
-			}
-			catch (Exception)
-			{
-				return new Tuple<bool, object>(false, null);
+				return info.Name;
 			}
 		}
 
-		private static object GetDefault(Type type)
+		public void ShowHelp()
 		{
-			if (type.IsValueType)
+			Console.WriteLine($"\nUsage: {Cli.AppName} {service.Name} {Name} params...\n");
+
+			if (!string.IsNullOrWhiteSpace(Description))
 			{
-				return Activator.CreateInstance(type);
+				Console.WriteLine($"{Description}\n");
 			}
 
-			return null;
+			Console.WriteLine($"Parameters:");
+			foreach (var method in parameters)
+			{
+				Console.Write(" ");
+				foreach (var reqParam in method.RequiredParameters) Console.Write($" --{reqParam} <value>");
+				foreach (var optParam in method.OptionalParameters) Console.Write($" [--{optParam} <value>]");
+				Console.WriteLine();
+			}
 		}
 	}
 }
