@@ -6,11 +6,21 @@ using System.Reflection;
 
 namespace AutoCli.Representation
 {
+	/// <summary>
+	/// A single <see cref="CliMethod"/> which matches a given method name, and includes one or
+	/// more parameter combinations which can be invoked.
+	/// </summary>
 	internal class CliMethod
 	{
 		private readonly CliService service;
 		private readonly List<CliParameters> parameters;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CliMethod"/> class for the specified
+		/// <see cref="CliService"/> and <see cref="MethodInfo"/>.
+		/// </summary>
+		/// <param name="service">The <see cref="CliService"/> instance.</param>
+		/// <param name="info">The method info.</param>
 		public CliMethod(CliService service, MethodInfo info)
 		{
 			this.service = service ?? throw new ArgumentNullException(nameof(service));
@@ -20,10 +30,22 @@ namespace AutoCli.Representation
 			Description = info.GetCustomAttribute<CliMethodAttribute>(true)?.Description;
 			Name = GetMethodName(info);
 		}
-		
+
+		/// <summary>
+		/// Gets the method description.
+		/// </summary>
 		public string Description { get; private set; }
+
+		/// <summary>
+		/// Gets the method name.
+		/// </summary>
 		public string Name { get; }
 
+		/// <summary>
+		/// Adds the provided <see cref="MethodInfo"/> to this <see cref="CliMethod"/> instance as
+		/// an additional parameter combination which can be invoked.
+		/// </summary>
+		/// <param name="info">The method info.</param>
 		public void AddMethod(MethodInfo info)
 		{
 			var description = info.GetCustomAttribute<CliMethodAttribute>(true)?.Description;
@@ -43,6 +65,14 @@ namespace AutoCli.Representation
 			parameters.Add(new CliParameters(this, info));
 		}
 
+		/// <summary>
+		/// Executes the provided input arguments against this <see cref="CliMethod"/> instance,
+		/// either invoking the appropriate parameter combination or showing help information.
+		/// </summary>
+		/// <param name="args">The input arguments.</param>
+		/// <returns>
+		/// True if CLI execution should stop.
+		/// </returns>
 		public bool Execute(string[] args)
 		{
 			if (!args[0].Equals(Name, StringComparison.OrdinalIgnoreCase)) return false;
@@ -64,12 +94,25 @@ namespace AutoCli.Representation
 			return true;
 		}
 
-		public object GetInstance()
+		/// <summary>
+		/// Returns an instance of the service type using the configured <see cref="CliService"/>.
+		/// </summary>
+		/// <returns>
+		/// An instance of the type.
+		/// </returns>
+		internal object Resolve()
 		{
-			return service.GetInstance();
+			return service.Resolve();
 		}
 
-		public static string GetMethodName(MethodInfo info)
+		/// <summary>
+		/// Returns the <see cref="CliMethod"/> name to use for the provided <see cref="MethodInfo"/>.
+		/// </summary>
+		/// <param name="info">The method info.</param>
+		/// <returns>
+		/// A string name.
+		/// </returns>
+		internal static string GetMethodName(MethodInfo info)
 		{
 			var attribute = info.GetCustomAttribute<CliMethodAttribute>(true);
 			if (attribute?.Name != null)
@@ -86,7 +129,11 @@ namespace AutoCli.Representation
 			}
 		}
 
-		public void ShowHelp()
+		/// <summary>
+		/// Writes the <see cref="CliMethod"/> help information to the console, which includes
+		/// any parameters combinations.
+		/// </summary>
+		private void ShowHelp()
 		{
 			Console.WriteLine($"\nUsage: {Cli.AppName} {service.Name} {Name} params...\n");
 

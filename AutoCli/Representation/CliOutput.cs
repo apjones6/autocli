@@ -7,6 +7,10 @@ using System.Reflection;
 
 namespace AutoCli.Representation
 {
+	/// <summary>
+	/// An output from an invocation of a <see cref="CliMethod"/>, which includes enough information
+	/// to write the result in an appropriate format.
+	/// </summary>
 	internal class CliOutput
     {
 		private readonly object result;
@@ -17,12 +21,21 @@ namespace AutoCli.Representation
 		private bool isTable;
 		private OutputProp[] props;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CliOutput"/> class with the provided
+		/// result data and its declared type.
+		/// </summary>
+		/// <param name="result">The output result data.</param>
+		/// <param name="declaredType">The output declared type.</param>
 		public CliOutput(object result, Type declaredType)
 		{
 			this.declaredType = declaredType ?? throw new ArgumentNullException(nameof(declaredType));
 			this.result = result;
 		}
 		
+		/// <summary>
+		/// Writes the result contained in this <see cref="CliOutput"/> to the current console.
+		/// </summary>
 		public void Write()
 		{
 			if (result == null) return;
@@ -72,6 +85,10 @@ namespace AutoCli.Representation
 			}
 		}
 
+		/// <summary>
+		/// Initializes the display information for this <see cref="CliOutput"/> instance, which
+		/// includes the properties to output (if class data), an whether to show as a table.
+		/// </summary>
 		private void Initialize()
 		{
 			if (initialized) return;
@@ -123,7 +140,15 @@ namespace AutoCli.Representation
 			}
 		}
 
-		private OutputProp[] GetProps(Type classType)
+		/// <summary>
+		/// Returns the <see cref="OutputProp"/>s to use for the specified <see cref="Type"/>, to
+		/// control how output is written, or null if not supported.
+		/// </summary>
+		/// <param name="classType">The class type to get properties for.</param>
+		/// <returns>
+		/// An array of <see cref="OutputProp"/>, or null.
+		/// </returns>
+		private static OutputProp[] GetProps(Type classType)
 		{
 			var props = new List<OutputProp>();
 
@@ -135,7 +160,7 @@ namespace AutoCli.Representation
 					// TODO: add support
 					if (!(prop.PropertyType.IsValueType || prop.PropertyType == typeof(string)))
 					{
-						throw new ApplicationException($"CliOutputAttribute cannot be applied to {prop.DeclaringType.FullName}.{prop.Name}. It can only be applied to value type and string properties.");
+						throw new ApplicationException($"{typeof(CliOutputAttribute).FullName} cannot be applied to {prop.DeclaringType.FullName}.{prop.Name}. It can only be applied to value type and string properties.");
 					}
 
 					props.Add(new OutputProp
@@ -158,9 +183,19 @@ namespace AutoCli.Representation
 				.ToArray();
 		}
 
+		/// <summary>
+		/// Describes a single property of a class type, which controls how invoke results are written.
+		/// </summary>
 		private struct OutputProp
 		{
+			/// <summary>
+			/// The <see cref="CliOutputAttribute"/> the property is decorated with.
+			/// </summary>
 			public CliOutputAttribute Attribute;
+
+			/// <summary>
+			/// The <see cref="PropertyInfo"/> for the property.
+			/// </summary>
 			public PropertyInfo Info;
 		}
 	}

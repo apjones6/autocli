@@ -6,12 +6,22 @@ using System.Reflection;
 
 namespace AutoCli.Representation
 {
+	/// <summary>
+	/// A single <see cref="CliService"/> which matches a given service name, and includes one or
+	/// more methods which can be invoked.
+	/// </summary>
 	internal class CliService
     {
 		private readonly Cli cli;
 		private readonly CliServiceAttribute attribute;
 		private readonly List<CliMethod> methods;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CliService"/> class for the specified
+		/// <see cref="Cli"/> and service type.
+		/// </summary>
+		/// <param name="cli">The CLI instance.</param>
+		/// <param name="serviceType">The service type.</param>
 		public CliService(Cli cli, Type serviceType)
 		{
 			this.cli = cli ?? throw new ArgumentNullException(nameof(cli));
@@ -21,10 +31,26 @@ namespace AutoCli.Representation
 			methods = new List<CliMethod>();
 		}
 
+		/// <summary>
+		/// Gets the service description.
+		/// </summary>
 		public string Description => attribute.Description;
+
+		/// <summary>
+		/// Gets the service name.
+		/// </summary>
 		public string Name => attribute.Name;
+
+		/// <summary>
+		/// Gets the service instance type.
+		/// </summary>
 		public Type Type { get; }
 		
+		/// <summary>
+		/// Adds one or more methods to the service, using the provided <see cref="MethodInfo"/>
+		/// instances.
+		/// </summary>
+		/// <param name="infos">The <see cref="MethodInfo"/> instances to add.</param>
 		public void AddMethods(IEnumerable<MethodInfo> infos)
 		{
 			foreach (var info in infos)
@@ -33,6 +59,14 @@ namespace AutoCli.Representation
 			}
 		}
 
+		/// <summary>
+		/// Executes the provided input arguments against this <see cref="CliService"/> instance,
+		/// either invoking the appropriate method or showing help information.
+		/// </summary>
+		/// <param name="args">The input arguments.</param>
+		/// <returns>
+		/// True if CLI execution should stop.
+		/// </returns>
 		public bool Execute(string[] args)
 		{
 			if (!args[0].Equals(Name, StringComparison.OrdinalIgnoreCase)) return false;
@@ -57,11 +91,25 @@ namespace AutoCli.Representation
 			return true;
 		}
 
-		public object GetInstance()
+		/// <summary>
+		/// Returns an instance of the service type using the configured <see cref="Cli"/>.
+		/// </summary>
+		/// <returns>
+		/// An instance of the type.
+		/// </returns>
+		internal object Resolve()
 		{
-			return cli.Resolver.Resolve(Type);
+			return cli.Resolve(Type);
 		}
 
+		/// <summary>
+		/// Returns the <see cref="CliMethod"/> for the provided <see cref="MethodInfo"/>, creating
+		/// it if it does not already exist.
+		/// </summary>
+		/// <param name="info">The method info.</param>
+		/// <returns>
+		/// A new or existing <see cref="CliMethod"/> instance.
+		/// </returns>
 		private CliMethod GetMethod(MethodInfo info)
 		{
 			var name = CliMethod.GetMethodName(info);
@@ -74,7 +122,14 @@ namespace AutoCli.Representation
 			return method;
 		}
 
-		public static CliServiceAttribute GetServiceAttribute(Type serviceType)
+		/// <summary>
+		/// Returns the <see cref="CliServiceAttribute"/> decorating the provided service type.
+		/// </summary>
+		/// <param name="serviceType">The service type.</param>
+		/// <returns>
+		/// The decorating <see cref="CliServiceAttribute"/> instance.
+		/// </returns>
+		private static CliServiceAttribute GetServiceAttribute(Type serviceType)
 		{
 			if (serviceType == null) throw new ArgumentNullException(nameof(serviceType));
 
@@ -88,7 +143,11 @@ namespace AutoCli.Representation
 			return attr;
 		}
 
-		public void ShowHelp()
+		/// <summary>
+		/// Writes the <see cref="CliService"/> help information to the console, which includes
+		/// methods.
+		/// </summary>
+		private void ShowHelp()
 		{
 			Console.WriteLine($"\nUsage: {Cli.AppName} {Name} METHOD\n");
 

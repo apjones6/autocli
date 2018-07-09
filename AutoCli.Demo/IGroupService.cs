@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Demo
 {
-	[CliService("Groups", Description = "Manage groups")]
+	[CliService("Groups", Description = "Manage groups and memberships")]
 	public interface IGroupService
 	{
 		[CliMethod(Description = "Add a user to the group")]

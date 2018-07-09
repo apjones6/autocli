@@ -20,10 +20,5 @@ namespace AutoCli.Demo
 
 		[CliOutput(Order = 2)]
 		public GroupVisibility Visibility { get; set; }
-
-		public override string ToString()
-		{
-			return $"{Id} ({Name})";
-		}
 	}
 }

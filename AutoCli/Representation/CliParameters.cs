@@ -54,7 +54,7 @@ namespace AutoCli.Representation
 			foreach (var param in parameters.Where(x => !parsedArgs.ContainsKey(x)))
 			{
 				parsedArgs[param] = param.IsThis
-					? method.GetInstance()
+					? method.Resolve()
 					: param.DefaultValue;
 			}
 
@@ -62,7 +62,7 @@ namespace AutoCli.Representation
 			var invokeParams = parameters.Select(x => parsedArgs[x]).ToArray();
 			
 			var result = parameters.Length == 0 || !parameters[0].IsThis
-				? info.Invoke(method.GetInstance(), invokeParams)
+				? info.Invoke(method.Resolve(), invokeParams)
 				: info.Invoke(null, invokeParams);
 
 			// Inspect the return type to output data for Task<T> and T return methods, but not for Task and void methods
