@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ namespace AutoCli.Demo
 		private const string FILENAME = "groups.json";
 		private List<Group> groups = null;
 
-		public async Task AddMemberAsync(Guid groupId, Guid userId)
+		public async Task<Response> AddMemberAsync(Guid groupId, Guid userId)
 		{
 			await LoadAsync();
 
@@ -24,9 +25,11 @@ namespace AutoCli.Demo
 				: group.MemberIds = new[] { userId };
 
 			await SaveAsync();
+
+			return new Response();
 		}
 		
-		public async Task<Group> CreateAsync(Group group)
+		public async Task<Response<Group>> CreateAsync(Group group)
 		{
 			await LoadAsync();
 
@@ -35,33 +38,42 @@ namespace AutoCli.Demo
 
 			await SaveAsync();
 
-			return group;
+			return new Response<Group>(group, HttpStatusCode.Created);
 		}
 		
-		public async Task DeleteAsync(Guid groupId)
+		public async Task<Response> DeleteAsync(Guid groupId)
 		{
 			await LoadAsync();
 
 			groups.RemoveAll(x => x.Id == groupId);
 
 			await SaveAsync();
+
+			return new Response(HttpStatusCode.NoContent);
 		}
 
-		public async Task<Group> GetAsync(Guid groupId)
+		public async Task<Response<Group>> GetAsync(Guid groupId)
 		{
 			await LoadAsync();
 
-			return groups.FirstOrDefault(x => x.Id == groupId);
+			var group = groups.FirstOrDefault(x => x.Id == groupId);
+			if (group != null)
+			{
+				return new Response<Group>(group);
+			}
+
+			return new Response<Group>(HttpStatusCode.NotFound);
 		}
 
-		public async Task<IEnumerable<Group>> ListAsync()
+		public async Task<Response<ResultSet<Group>>> ListAsync()
 		{
 			await LoadAsync();
 
-			return groups;
+			var results = new ResultSet<Group>(groups, groups.Count);
+			return new Response<ResultSet<Group>>(results);
 		}
 
-		public async Task RemoveMemberAsync(Guid groupId, Guid userId)
+		public async Task<Response> RemoveMemberAsync(Guid groupId, Guid userId)
 		{
 			await LoadAsync();
 
@@ -72,6 +84,8 @@ namespace AutoCli.Demo
 			}
 
 			await SaveAsync();
+
+			return new Response();
 		}
 
 		private async Task LoadAsync()

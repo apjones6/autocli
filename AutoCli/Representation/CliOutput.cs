@@ -11,39 +11,21 @@ namespace AutoCli.Representation
 	/// An output from an invocation of a <see cref="CliMethod"/>, which includes enough information
 	/// to write the result in an appropriate format.
 	/// </summary>
-	internal class CliOutput
+	internal class CliOutput : Output
     {
-		private readonly object result;
-		private readonly Type declaredType;
-
 		private List<List<string>> cells;
-		private bool initialized;
 		private bool isTable;
 		private OutputProp[] props;
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CliOutput"/> class with the provided
-		/// result data and its declared type.
-		/// </summary>
-		/// <param name="result">The output result data.</param>
-		/// <param name="declaredType">The output declared type.</param>
-		public CliOutput(object result, Type declaredType)
-		{
-			this.declaredType = declaredType ?? throw new ArgumentNullException(nameof(declaredType));
-			this.result = result;
-		}
 		
 		/// <summary>
 		/// Writes the result contained in this <see cref="CliOutput"/> to the current console.
 		/// </summary>
-		public void Write()
+		public override void Write()
 		{
-			if (result == null) return;
-
+			if (Result == null) return;
+			
 			Initialize();
-
-			Console.WriteLine();
-
+			
 			if (props != null)
 			{
 				if (isTable)
@@ -72,33 +54,30 @@ namespace AutoCli.Representation
 					}
 				}
 			}
-			else if (typeof(IEnumerable).IsAssignableFrom(declaredType))
+			else if (typeof(IEnumerable).IsAssignableFrom(DeclaredType))
 			{
-				foreach (var item in (IEnumerable)result)
+				foreach (var item in (IEnumerable)Result)
 				{
 					Console.WriteLine(item);
 				}
 			}
 			else
 			{
-				Console.WriteLine(result);
+				Console.WriteLine(Result);
 			}
 		}
 
 		/// <summary>
-		/// Initializes the display information for this <see cref="CliOutput"/> instance, which
-		/// includes the properties to output (if class data), an whether to show as a table.
+		/// Initializes the display information for this <see cref="CliOutput"/> instance, to
+		/// determine whether to writ a table, list, or singular value.
 		/// </summary>
 		private void Initialize()
 		{
-			if (initialized) return;
-			initialized = true;
-			
-			if (typeof(IEnumerable).IsAssignableFrom(declaredType))
+			if (typeof(IEnumerable).IsAssignableFrom(DeclaredType))
 			{
 				isTable = true;
 
-				var enumerableType = declaredType.GetInterfaces().Union(new[] { declaredType }).FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+				var enumerableType = DeclaredType.GetInterfaces().Union(new[] { DeclaredType }).FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 				if (enumerableType != null)
 				{
 					var itemType = enumerableType.GetGenericArguments()[0];
@@ -108,9 +87,9 @@ namespace AutoCli.Representation
 					}
 				}
 			}
-			else if (declaredType.IsClass)
+			else if (DeclaredType.IsClass)
 			{
-				props = GetProps(declaredType);
+				props = GetProps(DeclaredType);
 			}
 
 			if (props != null)
@@ -124,7 +103,7 @@ namespace AutoCli.Representation
 				if (isTable)
 				{
 					// Add rows for all the values
-					foreach (var item in (IEnumerable)result)
+					foreach (var item in (IEnumerable)Result)
 					{
 						cells.Add(props
 							.Select(x => x.Info.GetValue(item)?.ToString())
@@ -134,7 +113,7 @@ namespace AutoCli.Representation
 				else
 				{
 					cells.Add(props
-						.Select(x => x.Info.GetValue(result)?.ToString())
+						.Select(x => x.Info.GetValue(Result)?.ToString())
 						.ToList());
 				}
 			}

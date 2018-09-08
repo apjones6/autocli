@@ -41,6 +41,11 @@ namespace AutoCli.Representation
 		}
 
 		/// <summary>
+		/// Gets the <see cref="AutoCli.Cli"/> instance.
+		/// </summary>
+		public Cli Cli => method.Cli;
+
+		/// <summary>
 		/// Executes the provided input arguments against this <see cref="CliParameters"/> instance,
 		/// either invoking the method and returning output, or returns false.
 		/// </summary>
@@ -93,13 +98,15 @@ namespace AutoCli.Representation
 				{
 					var declaredType = info.ReturnType.GetGenericArguments()[0];
 					var taskResult = info.ReturnType.GetProperty("Result").GetValue(task);
-					var output = new CliOutput(taskResult, declaredType);
+					var output = Cli.CreateOutput(taskResult, declaredType);
+					Console.WriteLine();
 					output.Write();
 				}
 			}
 			else if (info.ReturnType != typeof(void))
 			{
-				var output = new CliOutput(result, info.ReturnType);
+				var output = Cli.CreateOutput(result, info.ReturnType);
+				Console.WriteLine();
 				output.Write();
 			}
 

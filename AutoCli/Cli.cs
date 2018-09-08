@@ -17,6 +17,7 @@ namespace AutoCli
 	/// </summary>
 	public class Cli
 	{
+		private readonly Dictionary<Type, Type> outputs;
 		private readonly List<CliService> services;
 
 		private string description;
@@ -28,6 +29,7 @@ namespace AutoCli
 		private Cli()
 		{
 			resolver = new Resolver(Activator.CreateInstance);
+			outputs = new Dictionary<Type, Type>();
 			services = new List<CliService>();
 		}
 
@@ -47,13 +49,14 @@ namespace AutoCli
 		/// </summary>
 		/// <remarks>
 		/// The extension classes must be decorated with <see cref="CliExtensionsAttribute"/> to be
-		/// found using this method.
+		/// added using this method.
 		/// </remarks>
 		/// <returns>
 		/// This <see cref="Cli"/> instance.
 		/// </returns>
 		public Cli AddExtensions()
 		{
+			// TODO: reuse assembly search between AddExtensions() and AddOutputs()
 			var methods = AppDomain.CurrentDomain
 				.GetAssemblies()
 				.AsParallel()
@@ -74,8 +77,71 @@ namespace AutoCli
 		}
 
 		/// <summary>
+		/// Adds the output type <typeparamref name="T"/> to this <see cref="Cli"/> instance, to be
+		/// used when the specified declared type must be output.
+		/// </summary>
+		/// <typeparam name="T">The output type.</typeparam>
+		/// <param name="declaredType">The declared type.</param>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli AddOutput<T>(Type declaredType)
+		{
+			return AddOutput(typeof(T), declaredType);
+		}
+
+		/// <summary>
+		/// Adds the specified output type to this <see cref="Cli"/> instance, to be used when the
+		/// specified declared type must be output.
+		/// </summary>
+		/// <param name="outputType">The output type.</param>
+		/// <param name="declaredType">The declared type.</param>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli AddOutput(Type outputType, Type declaredType)
+		{
+			outputs[declaredType] = outputType;
+
+			return this;
+		}
+
+		/// <summary>
+		/// Adds output types to this <see cref="Cli"/> instance from all available assemblies.
+		/// </summary>
+		/// <remarks>
+		/// The output classes must inherit from <see cref="Output"/>, and be decorated with
+		/// <see cref="CliOutputTypeAttribute"/> to be added using this method.
+		/// </remarks>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli AddOutputs()
+		{
+			// TODO: reuse assembly search between AddExtensions() and AddOutputs()
+			var types = AppDomain.CurrentDomain
+				.GetAssemblies()
+				.AsParallel()
+				.SelectMany(x => x.GetExportedTypes().Where(t => t.IsSubclassOf(typeof(Output)) && t.GetCustomAttribute<CliOutputTypeAttribute>() != null))
+				.ToArray();
+
+			foreach (var outputType in types)
+			{
+				var attribute = outputType.GetCustomAttribute<CliOutputTypeAttribute>();
+				var declaredTypes = attribute.DeclaredTypes ?? new[] { attribute.DeclaredType };
+				foreach (var declaredType in declaredTypes)
+				{
+					AddOutput(outputType, declaredType);
+				}
+			}
+
+			return this;
+		}
+
+		/// <summary>
 		/// Adds the service type <typeparamref name="T"/> to this <see cref="Cli"/> instance.
 		/// </summary>
+		/// <typeparam name="T">The service type.</typeparam>
 		/// <returns>
 		/// This <see cref="Cli"/> instance.
 		/// </returns>
@@ -115,12 +181,16 @@ namespace AutoCli
 				if (args[0] == "--help")
 				{
 					ShowHelp();
+					// Extra newline for powershell usage
+					Console.WriteLine();
 					return;
 				}
 				else if (args[0] == "-v" || args[0] == "--version")
 				{
 					var version = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location);
 					Console.WriteLine($"{AppName} version {version.FileVersion}");
+					// Extra newline for powershell usage
+					Console.WriteLine();
 					return;
 				}
 			}
@@ -139,6 +209,37 @@ namespace AutoCli
 			{
 				ShowHelp();
 			}
+
+			// Extra newline for powershell usage
+			Console.WriteLine();
+		}
+
+		/// <summary>
+		/// Returns a new instance of the <see cref="Output"/> class with the provided
+		/// result data and its declared type.
+		/// </summary>
+		/// <param name="result">The output result data.</param>
+		/// <param name="declaredType">The output declared type.</param>
+		/// <returns>
+		/// A new <see cref="Output"/> instance.
+		/// </returns>
+		internal Output CreateOutput(object result, Type declaredType)
+		{
+			// Look for a custom output for this type
+			// If declared type is generic, also try looking for the generic definition
+			// Otherwise use fallback
+			if (!outputs.TryGetValue(declaredType, out var type) && !(declaredType.IsGenericType && outputs.TryGetValue(declaredType.GetGenericTypeDefinition(), out type)))
+			{
+				type = typeof(CliOutput);
+			}
+
+			var output = (Output)Activator.CreateInstance(type);
+
+			output.Cli = this;
+			output.DeclaredType = declaredType;
+			output.Result = result;
+
+			return output;
 		}
 
 		/// <summary>

@@ -12,7 +12,6 @@ namespace AutoCli.Representation
 	/// </summary>
 	internal class CliService
     {
-		private readonly Cli cli;
 		private readonly CliServiceAttribute attribute;
 		private readonly List<CliMethod> methods;
 
@@ -24,12 +23,17 @@ namespace AutoCli.Representation
 		/// <param name="serviceType">The service type.</param>
 		public CliService(Cli cli, Type serviceType)
 		{
-			this.cli = cli ?? throw new ArgumentNullException(nameof(cli));
+			Cli = cli ?? throw new ArgumentNullException(nameof(cli));
 			Type = serviceType ?? throw new ArgumentNullException(nameof(serviceType));
 
 			attribute = GetServiceAttribute(serviceType);
 			methods = new List<CliMethod>();
 		}
+
+		/// <summary>
+		/// Gets the <see cref="AutoCli.Cli"/> instance.
+		/// </summary>
+		public Cli Cli { get; }
 
 		/// <summary>
 		/// Gets the service description.
@@ -99,7 +103,7 @@ namespace AutoCli.Representation
 		/// </returns>
 		internal object Resolve()
 		{
-			return cli.Resolve(Type);
+			return Cli.Resolve(Type);
 		}
 
 		/// <summary>

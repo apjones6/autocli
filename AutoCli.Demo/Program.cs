@@ -12,6 +12,7 @@ namespace AutoCli.Demo
 				.AddService<IGroupService>()
 				.AddService<IUserService>()
 				.AddExtensions()
+				.AddOutputs()
 				.Execute(args);
 		}
 

@@ -32,6 +32,11 @@ namespace AutoCli.Representation
 		}
 
 		/// <summary>
+		/// Gets the <see cref="AutoCli.Cli"/> instance.
+		/// </summary>
+		public Cli Cli => service.Cli;
+
+		/// <summary>
 		/// Gets the method description.
 		/// </summary>
 		public string Description { get; private set; }

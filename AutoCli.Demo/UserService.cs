@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ namespace AutoCli.Demo
 		private const string FILENAME = "users.json";
 		private List<User> users = null;
 		
-		public async Task<User> CreateAsync(User user)
+		public async Task<Response<User>> CreateAsync(User user)
 		{
 			await LoadAsync();
 
@@ -23,30 +24,39 @@ namespace AutoCli.Demo
 
 			await SaveAsync();
 
-			return user;
+			return new Response<User>(user, HttpStatusCode.Created);
 		}
 		
-		public async Task DeleteAsync(Guid userId)
+		public async Task<Response> DeleteAsync(Guid userId)
 		{
 			await LoadAsync();
 			
 			users.RemoveAll(x => x.Id == userId);
 
 			await SaveAsync();
+
+			return new Response(HttpStatusCode.NoContent);
 		}
 
-		public async Task<User> GetAsync(Guid userId)
+		public async Task<Response<User>> GetAsync(Guid userId)
 		{
 			await LoadAsync();
 
-			return users.FirstOrDefault(x => x.Id == userId);
+			var user = users.FirstOrDefault(x => x.Id == userId);
+			if (user != null)
+			{
+				return new Response<User>(user);
+			}
+
+			return new Response<User>(HttpStatusCode.NotFound);
 		}
 
-		public async Task<IEnumerable<User>> ListAsync()
+		public async Task<Response<ResultSet<User>>> ListAsync()
 		{
 			await LoadAsync();
 
-			return users;
+			var results = new ResultSet<User>(users, users.Count);
+			return new Response<ResultSet<User>>(results);
 		}
 
 		private async Task LoadAsync()

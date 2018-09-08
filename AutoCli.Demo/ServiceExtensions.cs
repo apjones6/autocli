@@ -1,7 +1,7 @@
 ﻿using AutoCli.Attributes;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace AutoCli.Demo
@@ -10,30 +10,45 @@ namespace AutoCli.Demo
 	public static class ServiceExtensions
 	{
 		[CliMethod]
-		public static async Task<User> CreateAsync(this IUserService userService, [CliParameter("name")] string displayName, int? age = null)
+		public static async Task<Response<User>> CreateAsync(this IUserService userService, [CliParameter("name")] string displayName, int? age = null)
 		{
 			var user = new User { Age = age, DisplayName = displayName };
 			return await userService.CreateAsync(user);
 		}
 
 		[CliMethod]
-		public static async Task<Group> CreateAsync(this IGroupService groupService, string name, GroupVisibility visibility = GroupVisibility.Authenticated)
+		public static async Task<Response<Group>> CreateAsync(this IGroupService groupService, string name, GroupVisibility visibility = GroupVisibility.Authenticated)
 		{
 			var group = new Group { Name = name, Visibility = visibility };
 			return await groupService.CreateAsync(group);
 		}
 
 		[CliMethod(Description = "List users in the group")]
-		public static async Task<IEnumerable<User>> ListMembersAsync(this IGroupService groupService, [CliParameter("group-id")] Guid groupId)
+		public static async Task<Response<ResultSet<User>>> ListMembersAsync(this IGroupService groupService, [CliParameter("group-id")] Guid groupId)
 		{
-			var group = await groupService.GetAsync(groupId);
-			if (group?.MemberIds?.Length > 0)
+			var response = await groupService.GetAsync(groupId);
+			if (response.StatusCode != HttpStatusCode.OK)
 			{
-				var userService = new UserService();
-				return await Task.WhenAll(group.MemberIds.Select(x => userService.GetAsync(x)).ToArray());
+				return new Response<ResultSet<User>>(HttpStatusCode.NotFound);
 			}
 
-			return new User[0];
+			var group = response.Content;
+			if (group.MemberIds?.Length > 0)
+			{
+				var userService = new UserService();
+				var responses = await Task.WhenAll(group.MemberIds.Select(x => userService.GetAsync(x)).ToArray());
+
+				var error = responses.FirstOrDefault(x => x.StatusCode != HttpStatusCode.OK);
+				if (error != null)
+				{
+					return new Response<ResultSet<User>>(HttpStatusCode.InternalServerError, error.Message);
+				}
+
+				var users = new ResultSet<User>(responses.Select(x => x.Content), group.MemberIds.Length);
+				return new Response<ResultSet<User>>(users);
+			}
+
+			return new Response<ResultSet<User>>(new ResultSet<User>());
 		}
 	}
 }
