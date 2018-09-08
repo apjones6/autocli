@@ -8,12 +8,22 @@ using System.Threading.Tasks;
 
 namespace AutoCli.Representation
 {
+	/// <summary>
+	/// A single <see cref="CliParameters"/> which matches a given parameter combination which can
+	/// be invoked.
+	/// </summary>
 	internal class CliParameters
 	{
 		private readonly CliMethod method;
 		private readonly MethodInfo info;
 		private readonly Parameter[] parameters;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CliParameters"/> class for the specified
+		/// <see cref="CliMethod"/> and <see cref="MethodInfo"/> to map.
+		/// </summary>
+		/// <param name="method">The <see cref="CliMethod"/> instance.</param>
+		/// <param name="info">The <see cref="MethodInfo"/> instance.</param>
 		public CliParameters(CliMethod method, MethodInfo info)
 		{
 			this.method = method ?? throw new ArgumentNullException(nameof(method));
@@ -29,7 +39,15 @@ namespace AutoCli.Representation
 				parameters[0].IsThis = true;
 			}
 		}
-		
+
+		/// <summary>
+		/// Executes the provided input arguments against this <see cref="CliParameters"/> instance,
+		/// either invoking the method and returning output, or returns false.
+		/// </summary>
+		/// <param name="args">The input arguments.</param>
+		/// <returns>
+		/// True if CLI execution should stop.
+		/// </returns>
 		public bool Execute(string[] args)
 		{
 			// Parse the provided arguments against out parameters. This will check for bad argument
@@ -88,6 +106,10 @@ namespace AutoCli.Representation
 			return true;
 		}
 
+		/// <summary>
+		/// Writes the <see cref="CliParameters"/> help information to the console, which includes
+		/// the arguments combination for this set.
+		/// </summary>
 		public void ShowHelp()
 		{
 			Console.Write(" ");
@@ -112,6 +134,14 @@ namespace AutoCli.Representation
 			Console.WriteLine();
 		}
 
+		/// <summary>
+		/// Returns the name to use for the provided <see cref="ParameterInfo"/>, either from a
+		/// <see cref="CliParameterAttribute"/> or the actual param name.
+		/// </summary>
+		/// <param name="info">The <see cref="ParameterInfo"/> instance.</param>
+		/// <returns>
+		/// A string value.
+		/// </returns>
 		private static string GetParameterName(ParameterInfo info)
 		{
 			var attr = info.GetCustomAttribute<CliParameterAttribute>(true);
@@ -123,6 +153,15 @@ namespace AutoCli.Representation
 			return info.Name;
 		}
 
+		/// <summary>
+		/// Converts the input string to the specified <see cref="Parameter"/> type, so that the
+		/// method can be invoked.
+		/// </summary>
+		/// <param name="input">The input string.</param>
+		/// <param name="parameter">The <see cref="Parameter"/> which determines the type.</param>
+		/// <returns>
+		/// An instance of the parameter type (can be null).
+		/// </returns>
 		private static object ConvertType(string input, Parameter parameter)
 		{
 			if (input != null)
@@ -147,6 +186,15 @@ namespace AutoCli.Representation
 			}
 		}
 
+		/// <summary>
+		/// Converts the input string to the specified <see cref="Type"/>, so that the method can
+		/// be invoked.
+		/// </summary>
+		/// <param name="input">The input string.</param>
+		/// <param name="type">The <see cref="Type"/>..</param>
+		/// <returns>
+		/// An instance of this type (can be null).
+		/// </returns>
 		private static Tuple<bool, object> ConvertType(string input, Type type)
 		{
 			Tuple<bool, object> result;
@@ -190,6 +238,13 @@ namespace AutoCli.Representation
 			}
 		}
 
+		/// <summary>
+		/// Returns the default value of the specified <see cref="Type"/>.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/>.</param>
+		/// <returns>
+		/// A value of the type (can be null).
+		/// </returns>
 		private static object GetDefault(Type type)
 		{
 			if (type.IsValueType)
@@ -200,6 +255,15 @@ namespace AutoCli.Representation
 			return null;
 		}
 
+		/// <summary>
+		/// Parses the provided CLI arguments against an enumerable of <see cref="Parameter"/>s, and
+		/// outputs a dictionary with the value for each parameter.
+		/// </summary>
+		/// <param name="parameters">The <see cref="Parameter"/>s to parse into.</param>
+		/// <param name="args">The arguments to parse.</param>
+		/// <returns>
+		/// A dictionary mapping each parameter to a value.
+		/// </returns>
 		private static IDictionary<Parameter, object> ParseArgs(IEnumerable<Parameter> parameters, string[] args)
 		{
 			var results = new Dictionary<Parameter, object>();
@@ -243,6 +307,9 @@ namespace AutoCli.Representation
 			return results;
 		}
 
+		/// <summary>
+		/// Describes a parameter with enough information to be used through the execute process.
+		/// </summary>
 		private struct Parameter
 		{
 			public object DefaultValue;

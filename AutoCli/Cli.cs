@@ -110,8 +110,6 @@ namespace AutoCli
 		/// <param name="args">The input arguments.</param>
 		public void Execute(string[] args)
 		{
-			var assembly = Assembly.GetEntryAssembly();
-
 			if (args.Length == 1)
 			{
 				if (args[0] == "--help")
@@ -121,7 +119,7 @@ namespace AutoCli
 				}
 				else if (args[0] == "-v" || args[0] == "--version")
 				{
-					var version = FileVersionInfo.GetVersionInfo(assembly.Location);
+					var version = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location);
 					Console.WriteLine($"{AppName} version {version.FileVersion}");
 					return;
 				}
