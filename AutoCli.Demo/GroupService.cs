@@ -65,11 +65,11 @@ namespace AutoCli.Demo
 			return new Response<Group>(HttpStatusCode.NotFound);
 		}
 
-		public async Task<Response<ResultSet<Group>>> ListAsync()
+		public async Task<Response<ResultSet<Group>>> ListAsync(int skip = 0, int take = 25)
 		{
 			await LoadAsync();
-
-			var results = new ResultSet<Group>(groups, groups.Count);
+			
+			var results = new ResultSet<Group>(groups.Skip(skip).Take(take).ToArray(), groups.Count);
 			return new Response<ResultSet<Group>>(results);
 		}
 

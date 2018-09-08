@@ -20,7 +20,7 @@ namespace AutoCli.Demo
 		Task<Response<Group>> GetAsync([CliParameter("group-id")] Guid groupId);
 
 		[CliMethod(Description = "List groups")]
-		Task<Response<ResultSet<Group>>> ListAsync();
+		Task<Response<ResultSet<Group>>> ListAsync(int skip = 0, int take = 25);
 
 		[CliMethod(Description = "Remove a user from the group")]
 		Task<Response> RemoveMemberAsync([CliParameter("group-id")] Guid groupId, [CliParameter("user-id")] Guid userId);

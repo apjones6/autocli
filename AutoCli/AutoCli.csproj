@@ -2,6 +2,10 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
+		<Authors>Alastair Jones</Authors>
+		<Description>Expose your services as a CLI (command line interface). The goal is with minimal effort (adding attributes to interfaces and classes) a fully-functioning CLI with informative messages and errors can be produced.</Description>
+		<RepositoryUrl>https://github.com/apjones6/autocli</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 </Project>
