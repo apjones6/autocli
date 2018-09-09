@@ -1,4 +1,4 @@
-# patch
+# 1.0.1 (Sep 09, 2018)
 * Add documentation to package
 
 # 1.0.0 (Sep 08, 2018)
