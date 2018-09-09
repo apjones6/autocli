@@ -7,7 +7,7 @@ namespace AutoCli.Demo
 	[CliService("Users", Description = "Manage users")]
 	public interface IUserService
 	{
-		[CliMethod(Description = "Create a user")]
+		[CliIgnore]
 		Task<Response<User>> CreateAsync(User user);
 
 		[CliMethod(Description = "Delete a user")]

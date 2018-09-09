@@ -1,3 +1,7 @@
+# minor
+* Fix to allow optional service, method and parameter attributes
+* Add CLI ignore attribute
+
 # 1.0.1 (Sep 09, 2018)
 * Add documentation to package
 

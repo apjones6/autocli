@@ -26,7 +26,7 @@ namespace AutoCli.Representation
 			Cli = cli ?? throw new ArgumentNullException(nameof(cli));
 			Type = serviceType ?? throw new ArgumentNullException(nameof(serviceType));
 
-			attribute = GetServiceAttribute(serviceType);
+			attribute = serviceType.GetCustomAttribute<CliServiceAttribute>(false);
 			methods = new List<CliMethod>();
 		}
 
@@ -38,12 +38,12 @@ namespace AutoCli.Representation
 		/// <summary>
 		/// Gets the service description.
 		/// </summary>
-		public string Description => attribute.Description;
+		public string Description => attribute?.Description;
 
 		/// <summary>
 		/// Gets the service name.
 		/// </summary>
-		public string Name => attribute.Name;
+		public string Name => attribute?.Name ?? GetServiceName(Type);
 
 		/// <summary>
 		/// Gets the service instance type.
@@ -127,24 +127,30 @@ namespace AutoCli.Representation
 		}
 
 		/// <summary>
-		/// Returns the <see cref="CliServiceAttribute"/> decorating the provided service type.
+		/// Returns the CLI argument name to use for the specified service type, if the type has
+		/// not been decorated with <see cref="CliServiceAttribute"/>.
 		/// </summary>
 		/// <param name="serviceType">The service type.</param>
 		/// <returns>
-		/// The decorating <see cref="CliServiceAttribute"/> instance.
+		/// The service name to use.
 		/// </returns>
-		private static CliServiceAttribute GetServiceAttribute(Type serviceType)
+		private static string GetServiceName(Type serviceType)
 		{
-			if (serviceType == null) throw new ArgumentNullException(nameof(serviceType));
+			var name = serviceType.Name;
 
-			// Find explicit attribute
-			var attr = serviceType.GetCustomAttribute<CliServiceAttribute>(false);
-			if (attr == null)
+			// Trim 'I' prefix from interfaces
+			if (serviceType.IsInterface && name[0] == 'I')
 			{
-				throw new ArgumentException($"The type must be decorated with {typeof(CliServiceAttribute).FullName}.", nameof(serviceType));
+				name = name.Substring(1);
 			}
 
-			return attr;
+			// Trim standard service suffixes
+			if (name.EndsWith("Service"))
+			{
+				name = name.Substring(0, name.Length - 7);
+			}
+
+			return name;
 		}
 
 		/// <summary>
@@ -155,11 +161,12 @@ namespace AutoCli.Representation
 		{
 			Console.WriteLine($"\nUsage: {Cli.AppName} {Name} METHOD\n");
 
-			if (!string.IsNullOrWhiteSpace(attribute.Description))
+			var description = Description;
+			if (!string.IsNullOrWhiteSpace(description))
 			{
-				Console.WriteLine($"{attribute.Description}\n");
+				Console.WriteLine($"{description}\n");
 			}
-
+			
 			Console.WriteLine($"Methods:");
 			var padding = methods.Max(x => x.Name.Length);
 			foreach (var m in methods.GroupBy(x => x.Name).Select(x => x.First()).OrderBy(x => x.Name))

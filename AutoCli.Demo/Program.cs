@@ -18,11 +18,11 @@ namespace AutoCli.Demo
 
 		static object GetService(Type serviceType)
 		{
-			if (serviceType == typeof(IGroupService))
+			if (serviceType == typeof(IGroupService) || serviceType == typeof(GroupService))
 			{
 				return new GroupService();
 			}
-			else if (serviceType == typeof(IUserService))
+			else if (serviceType == typeof(IUserService) || serviceType == typeof(UserService))
 			{
 				return new UserService();
 			}
