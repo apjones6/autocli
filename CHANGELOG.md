@@ -1,3 +1,6 @@
+# patch
+* Add documentation to package
+
 # 1.0.0 (Sep 08, 2018)
 * Add AutoCli project
 * Add CLI service, method, and parameter attributes
