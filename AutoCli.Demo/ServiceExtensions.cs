@@ -9,18 +9,24 @@ namespace AutoCli.Demo
 	[CliExtensions]
 	public static class ServiceExtensions
 	{
-		[CliMethod]
+		[CliMethod(Description = "Create a user")]
 		public static async Task<Response<User>> CreateAsync(this IUserService userService, [CliParameter("name")] string displayName, int? age = null)
 		{
 			var user = new User { Age = age, DisplayName = displayName };
 			return await userService.CreateAsync(user);
 		}
 
-		[CliMethod]
+		[CliMethod(Description = "Create a group")]
 		public static async Task<Response<Group>> CreateAsync(this IGroupService groupService, string name, GroupVisibility visibility = GroupVisibility.Authenticated)
 		{
 			var group = new Group { Name = name, Visibility = visibility };
 			return await groupService.CreateAsync(group);
+		}
+		
+		[CliIgnore]
+		public static Task<Response> DeleteAllAsync(this IGroupService groupService)
+		{
+			return Task.FromResult(new Response(HttpStatusCode.NotImplemented, "The delete all groups function is not yet available."));
 		}
 
 		[CliMethod(Description = "List users in the group")]

@@ -62,15 +62,16 @@ namespace AutoCli
 				.AsParallel()
 				.SelectMany(x => x.GetExportedTypes().Where(t => t.GetCustomAttribute<CliExtensionsAttribute>() != null))
 				.SelectMany(x => x.GetMethods(BindingFlags.Static | BindingFlags.Public))
-				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false))
+				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false) && !x.IsDefined(typeof(CliIgnoreAttribute)))
 				.Select(x => new { Method = x, Parameters = x.GetParameters() })
-				.Where(x => x.Parameters.Length > 0 && services.Any(s => s.Type == x.Parameters[0].ParameterType))
+				.Where(x => x.Parameters.Length > 0 && services.Any(s => x.Parameters[0].ParameterType.IsAssignableFrom(s.Type)))
 				.GroupBy(x => x.Parameters[0].ParameterType, x => x.Method)
 				.ToArray();
 
-			foreach (var group in methods)
+			foreach (var group in methods.Where(x => x.Any()))
 			{
-				GetService(group.Key).AddMethods(group);
+				var serviceType = services.First(s => group.Key.IsAssignableFrom(s.Type)).Type;
+				GetService(serviceType).AddMethods(group);
 			}
 			
 			return this;
@@ -122,7 +123,7 @@ namespace AutoCli
 			var types = AppDomain.CurrentDomain
 				.GetAssemblies()
 				.AsParallel()
-				.SelectMany(x => x.GetExportedTypes().Where(t => t.IsSubclassOf(typeof(Output)) && t.GetCustomAttribute<CliOutputTypeAttribute>() != null))
+				.SelectMany(x => x.GetExportedTypes().Where(t => t.IsSubclassOf(typeof(Output)) && t.IsDefined(typeof(CliOutputTypeAttribute))))
 				.ToArray();
 
 			foreach (var outputType in types)
@@ -159,12 +160,16 @@ namespace AutoCli
 		/// </returns>
 		public Cli AddService(Type serviceType)
 		{
+			// Don't add methods from object, or methods decorated with [CliIgnore]
 			var methods = serviceType
 				.GetMethods()
-				.Where(x => x.GetCustomAttribute<CliMethodAttribute>(true) != null)
+				.Where(x => x.GetBaseDefinition().DeclaringType != typeof(object) && !x.IsDefined(typeof(CliIgnoreAttribute)))
 				.ToArray();
 
-			GetService(serviceType).AddMethods(methods);
+			if (methods.Length > 0)
+			{
+				GetService(serviceType).AddMethods(methods);
+			}
 
 			return this;
 		}
@@ -332,11 +337,14 @@ namespace AutoCli
 			Console.WriteLine();
 
 			Console.WriteLine("Services:");
-			var padding = services.Max(x => x.Name.Length);
-			foreach (var s in services.OrderBy(x => x.Name))
+			if (services.Count > 0)
 			{
-				// TODO: Wrap description based on console width
-				Console.WriteLine($"  {s.Name.PadRight(padding)}  {s.Description}");
+				var padding = services.Max(x => x.Name.Length);
+				foreach (var s in services.OrderBy(x => x.Name))
+				{
+					// TODO: Wrap description based on console width
+					Console.WriteLine($"  {s.Name.PadRight(padding)}  {s.Description}");
+				}
 			}
 		}
 	}

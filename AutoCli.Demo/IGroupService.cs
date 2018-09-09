@@ -10,7 +10,7 @@ namespace AutoCli.Demo
 		[CliMethod(Description = "Add a user to the group")]
 		Task<Response> AddMemberAsync([CliParameter("group-id")] Guid groupId, [CliParameter("user-id")] Guid userId);
 
-		[CliMethod(Description = "Create a group")]
+		[CliIgnore]
 		Task<Response<Group>> CreateAsync(Group group);
 
 		[CliMethod(Description = "Delete a group")]
