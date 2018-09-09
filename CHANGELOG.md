@@ -1,4 +1,4 @@
-# minor
+# 1.1.0 (Sep 09, 2018)
 * Fix to allow optional service, method and parameter attributes
 * Add CLI ignore attribute
 
