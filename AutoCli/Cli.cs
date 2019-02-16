@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace AutoCli
 {
@@ -21,6 +22,7 @@ namespace AutoCli
 		private readonly List<CliService> services;
 
 		private string description;
+		private NameConvention nameConvention = NameConvention.KebabCase;
 		private IResolver resolver;
 
 		/// <summary>
@@ -220,6 +222,47 @@ namespace AutoCli
 		}
 
 		/// <summary>
+		/// Returns a string name to use, by applying the active <see cref="NameConvention"/>
+		/// rules to the provided candidate name.
+		/// </summary>
+		/// <param name="name">The input name.</param>
+		/// <returns>
+		/// A name which follows conventions.
+		/// </returns>
+		internal string ApplyNameConvention(string name)
+		{
+			// Splitting on convention is easy for now, but going forward we may want
+			// to support specifying an implementation of a base class (strategy pattern)
+			var separator = nameConvention == NameConvention.KebabCase ? '-' : '_';
+
+			// In general we can put a hyphen in front of every uppercase character
+			// except one at index 0. However we also guard against values which look
+			// like acronyms (e.g. SaveXMLFile becomes save-xml-file)
+			var sb = new StringBuilder(name.Length);
+			var prevLower = false;
+			for (var i = 0; i < name.Length; ++i)
+			{
+				var c = name[i];
+				if (char.IsUpper(c))
+				{
+					// Insert hyphen then:
+					//   - Going from lowercase to uppercase
+					//   - Staying uppercase, and the next character is lowercase
+					if (prevLower || (i != 0 && i < name.Length - 1 && char.IsUpper(name[i + 1]))) sb.Append(separator);
+					sb.Append(char.ToLower(c));
+					prevLower = false;
+				}
+				else
+				{
+					sb.Append(char.ToLower(c));
+					prevLower = true;
+				}
+			}
+
+			return sb.ToString();
+		}
+
+		/// <summary>
 		/// Returns a new instance of the <see cref="Output"/> class with the provided
 		/// result data and its declared type.
 		/// </summary>
@@ -270,6 +313,19 @@ namespace AutoCli
 		{
 			if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("The description cannot be null, empty, or whitespace.", nameof(description));
 			this.description = description;
+			return this;
+		}
+
+		/// <summary>
+		/// Sets the <see cref="Cli"/> name convention, which determines how names are formatted for use.
+		/// </summary>
+		/// <param name="nameConvention">The name convention to apply.</param>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli SetNameConvention(NameConvention nameConvention)
+		{
+			this.nameConvention = nameConvention;
 			return this;
 		}
 

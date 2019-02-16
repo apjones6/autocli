@@ -31,7 +31,7 @@ namespace AutoCli.Representation
 
 			parameters = info
 				.GetParameters()
-				.Select(x => new Parameter { DefaultValue = x.DefaultValue, IsDefault = x.HasDefaultValue, Name = GetParameterName(x), Type = x.ParameterType })
+				.Select(x => new Parameter { DefaultValue = x.DefaultValue, IsDefault = x.HasDefaultValue, Name = Cli.ApplyNameConvention(GetParameterName(x)), Type = x.ParameterType })
 				.ToArray();
 
 			if (info.IsDefined(typeof(ExtensionAttribute), false))

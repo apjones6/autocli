@@ -11,10 +11,10 @@ namespace AutoCli.Demo
 		Task<Response<User>> CreateAsync(User user);
 
 		[CliMethod(Description = "Delete a user")]
-		Task<Response> DeleteAsync([CliParameter("user-id")] Guid userId);
+		Task<Response> DeleteAsync(Guid userId);
 
 		[CliMethod(Description = "Get a user")]
-		Task<Response<User>> GetAsync([CliParameter("user-id")] Guid userId);
+		Task<Response<User>> GetAsync(Guid userId);
 
 		[CliMethod(Description = "List users")]
 		Task<Response<ResultSet<User>>> ListAsync();

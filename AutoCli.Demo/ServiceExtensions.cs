@@ -30,7 +30,7 @@ namespace AutoCli.Demo
 		}
 
 		[CliMethod(Description = "List users in the group")]
-		public static async Task<Response<ResultSet<User>>> ListMembersAsync(this IGroupService groupService, [CliParameter("group-id")] Guid groupId)
+		public static async Task<Response<ResultSet<User>>> ListMembersAsync(this IGroupService groupService, Guid groupId)
 		{
 			var response = await groupService.GetAsync(groupId);
 			if (response.StatusCode != HttpStatusCode.OK)

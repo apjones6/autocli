@@ -39,11 +39,11 @@ namespace AutoCli.Representation
 		/// Gets the service description.
 		/// </summary>
 		public string Description => attribute?.Description;
-
+		
 		/// <summary>
 		/// Gets the service name.
 		/// </summary>
-		public string Name => attribute?.Name ?? GetServiceName(Type);
+		public string Name => Cli.ApplyNameConvention(attribute?.Name ?? GetServiceName(Type));
 
 		/// <summary>
 		/// Gets the service instance type.

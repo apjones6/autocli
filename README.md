@@ -15,6 +15,7 @@ class Program
     {
         Cli.Builder
             .SetDescription("A demo CLI application")
+            .SetNameConvention(NameConvention.KebabCase)
             .SetResolver(GetService)
             .AddService<IGroupService>()
             .AddService<IUserService>()
@@ -30,6 +31,13 @@ This snippet creates the `Cli` instance, gives it a description and a resolver t
 ### `SetDescription`
 
 Sets some description text, which is included in help information. The app name is determined from the exe filename.
+
+### `SetNameConvention`
+
+Sets how service, method and parameter names are formatted. The currently available conventions are:
+
+ - KebabCase: Formats like "save-xml-file" (default)
+ - SnakeCase: Formats like "save_xml_file"
 
 ### `SetResolver`
 
@@ -54,3 +62,13 @@ Allows you to add a single `Output` class to the `Cli` instance, in a similar wa
 ### `Execute`
 
 The primary method of the `Cli` class, should be provided with the command line arguments. This method will match the arguments (in order) against the service, method, and then parameters, to determine which method overload to invoke. If none is found appropriate help information is shown, using the services, methods, and parameter combinations registered. Otherwise the method is invoked, and the result is output, first inspecting the `Output` classes available, and falling back to built-in output mechanisms.
+
+## Roadmap
+
+* Input classes/structs
+* Input/output YAML/JSON/XML/other file data
+* Clear method alias overloads (different parameter sets)
+* Default parameters (unnamed)
+* Powershell completion
+* Unit testing
+* Wiki?

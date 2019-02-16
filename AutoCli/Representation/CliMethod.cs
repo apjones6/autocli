@@ -28,7 +28,7 @@ namespace AutoCli.Representation
 			parameters = new List<CliParameters>();
 
 			Description = info.GetCustomAttribute<CliMethodAttribute>(true)?.Description;
-			Name = GetMethodName(info);
+			Name = Cli.ApplyNameConvention(GetMethodName(info));
 		}
 
 		/// <summary>
