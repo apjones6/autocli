@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Authors>Alastair Jones</Authors>
+		<Description>Extends the AutoCli library with JSON support in command line parameters and input/output file functionality.</Description>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RepositoryUrl>https://github.com/apjones6/autocli</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<Version>0.1.0</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AutoCli\AutoCli.csproj" />
+	</ItemGroup>
+
+</Project>

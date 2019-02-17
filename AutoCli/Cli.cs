@@ -1,6 +1,7 @@
 ﻿using AutoCli.Attributes;
 using AutoCli.Representation;
 using AutoCli.Resolvers;
+using AutoCli.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +20,7 @@ namespace AutoCli
 	public class Cli
 	{
 		private readonly Dictionary<Type, Type> outputs;
+		private readonly List<ICliSerializer> serializers;
 		private readonly List<CliService> services;
 
 		private string description;
@@ -30,8 +32,9 @@ namespace AutoCli
 		/// </summary>
 		private Cli()
 		{
-			resolver = new Resolver(Activator.CreateInstance);
 			outputs = new Dictionary<Type, Type>();
+			resolver = new Resolver(Activator.CreateInstance);
+			serializers = new List<ICliSerializer> { new CommandLineSerializer() };
 			services = new List<CliService>();
 		}
 
@@ -142,6 +145,33 @@ namespace AutoCli
 		}
 
 		/// <summary>
+		/// Adds a new instance of the specified <see cref="ICliSerializer"/> type to this
+		/// <see cref="Cli"/> instance.
+		/// </summary>
+		/// <typeparam name="T">The serializer type.</typeparam>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli AddSerializer<T>() where T : ICliSerializer, new()
+		{
+			serializers.Add(new T());
+			return this;
+		}
+
+		/// <summary>
+		/// Adds the provided <see cref="ICliSerializer"/> to this <see cref="Cli"/> instance.
+		/// </summary>
+		/// <param name="serializer">The serializer.</param>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli AddSerializer(ICliSerializer serializer)
+		{
+			serializers.Add(serializer);
+			return this;
+		}
+
+		/// <summary>
 		/// Adds the service type <typeparamref name="T"/> to this <see cref="Cli"/> instance.
 		/// </summary>
 		/// <typeparam name="T">The service type.</typeparam>
@@ -195,7 +225,8 @@ namespace AutoCli
 				else if (args[0] == "-v" || args[0] == "--version")
 				{
 					var version = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location);
-					Console.WriteLine($"{AppName} version {version.FileVersion}");
+					Console.WriteLine(AppName);
+					Console.WriteLine(version.FileVersion);
 					// Extra newline for powershell usage
 					Console.WriteLine();
 					return;
@@ -214,6 +245,7 @@ namespace AutoCli
 
 			if (!handled)
 			{
+				// TODO: Also show an input error
 				ShowHelp();
 			}
 
@@ -300,6 +332,29 @@ namespace AutoCli
 		internal object Resolve(Type serviceType)
 		{
 			return resolver.Resolve(serviceType);
+		}
+
+		/// <summary>
+		/// Attempts to read the provided input and output the parameter value of the appropriate type to use.
+		/// </summary>
+		/// <param name="input">The input to read.</param>
+		/// <param name="type">The parameter type to convert to.</param>
+		/// <param name="parameter">The parameter value.</param>
+		/// <returns>
+		/// True if the input was read, false otherwise.
+		/// </returns>
+		internal bool TryReadParameter(string input, Type type, out object parameter)
+		{
+			foreach (var serializer in serializers)
+			{
+				if (serializer.TryReadParameter(input, type, out parameter))
+				{
+					return true;
+				}
+			}
+			
+			parameter = null;
+			return false;
 		}
 
 		/// <summary>

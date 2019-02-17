@@ -14,6 +14,26 @@ namespace AutoCli.Representation
 	/// </summary>
 	internal class CliParameters
 	{
+		private static readonly Dictionary<Type, string> ALIASES = new Dictionary<Type, string>()
+		{
+			{ typeof(byte), "byte" },
+			{ typeof(sbyte), "sbyte" },
+			{ typeof(short), "short" },
+			{ typeof(ushort), "ushort" },
+			{ typeof(int), "int" },
+			{ typeof(uint), "uint" },
+			{ typeof(long), "long" },
+			{ typeof(ulong), "ulong" },
+			{ typeof(float), "float" },
+			{ typeof(double), "double" },
+			{ typeof(decimal), "decimal" },
+			{ typeof(object), "object" },
+			{ typeof(bool), "bool" },
+			{ typeof(char), "char" },
+			{ typeof(string), "string" },
+			{ typeof(void), "void" }
+		};
+
 		private readonly CliMethod method;
 		private readonly MethodInfo info;
 		private readonly Parameter[] parameters;
@@ -62,8 +82,12 @@ namespace AutoCli.Representation
 			{
 				parsedArgs = ParseArgs(parameters, args);
 			}
-			catch (ArgumentException)
+			catch (ArgumentException ex)
 			{
+				// HACK: use object return value to describe errors (differentiate parameter mismatch from read errors etc)
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
 				return false;
 			}
 
@@ -125,10 +149,7 @@ namespace AutoCli.Representation
 			{
 				if (!param.IsThis)
 				{
-					var typeName = param.Type.IsGenericType && param.Type.GetGenericTypeDefinition() == typeof(Nullable<>)
-						? param.Type.GetGenericArguments()[0].Name
-						: param.Type.Name;
-					var token = $"--{param.Name} <{typeName}>";
+					var token = $"--{param.Name} <{GetTypeName(param.Type)}>";
 					if (param.IsDefault)
 					{
 						token = $"[{token}]";
@@ -161,6 +182,31 @@ namespace AutoCli.Representation
 		}
 
 		/// <summary>
+		/// Returns the type name to use for the specified <see cref="Type"/>, which accounts
+		/// for nullable and system types.
+		/// </summary>
+		/// <param name="type">The type to name.</param>
+		/// <returns>
+		/// The name to use for the type.
+		/// </returns>
+		private static string GetTypeName(Type type)
+		{
+			// Get the inner type for nullable
+			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+			{
+				type = type.GetGenericArguments()[0];
+			}
+
+			// If it's a system type use the alias, otherwise the name property
+			if (!ALIASES.TryGetValue(type, out var name))
+			{
+				name = type.Name;
+			}
+
+			return name;
+		}
+
+		/// <summary>
 		/// Converts the input string to the specified <see cref="Parameter"/> type, so that the
 		/// method can be invoked.
 		/// </summary>
@@ -169,19 +215,16 @@ namespace AutoCli.Representation
 		/// <returns>
 		/// An instance of the parameter type (can be null).
 		/// </returns>
-		private static object ConvertType(string input, Parameter parameter)
+		private object ConvertType(string input, Parameter parameter)
 		{
 			if (input != null)
 			{
-				var paramValue = ConvertType(input, parameter.Type);
-				if (paramValue.Item1)
+				if (Cli.TryReadParameter(input, parameter.Type, out var value))
 				{
-					return paramValue.Item2;
+					return value;
 				}
-				else
-				{
-					throw new ArgumentException($"Could not convert \"{input}\" to type \"{parameter.Type}\".");
-				}
+
+				throw new ArgumentException($"Could not convert \"{input}\" to type \"{parameter.Type}\".");
 			}
 			else if (parameter.IsDefault)
 			{
@@ -192,59 +235,7 @@ namespace AutoCli.Representation
 				throw new ArgumentException($"Parameter \"{parameter.Name}\" is required.");
 			}
 		}
-
-		/// <summary>
-		/// Converts the input string to the specified <see cref="Type"/>, so that the method can
-		/// be invoked.
-		/// </summary>
-		/// <param name="input">The input string.</param>
-		/// <param name="type">The <see cref="Type"/>..</param>
-		/// <returns>
-		/// An instance of this type (can be null).
-		/// </returns>
-		private static Tuple<bool, object> ConvertType(string input, Type type)
-		{
-			Tuple<bool, object> result;
-
-			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-			{
-				result = ConvertType(input, type.GetGenericArguments()[0]);
-				if (result.Item1)
-				{
-					return result;
-				}
-			}
-
-			if (type.IsEnum)
-			{
-				try
-				{
-					return Tuple.Create(true, Enum.Parse(type, input, true));
-				}
-				catch (Exception)
-				{
-					return new Tuple<bool, object>(false, null);
-				}
-			}
-
-			if (type == typeof(Guid))
-			{
-				if (Guid.TryParse(input, out var guid))
-				{
-					return Tuple.Create(true, (object)guid);
-				}
-			}
-
-			try
-			{
-				return Tuple.Create(true, Convert.ChangeType(input, type));
-			}
-			catch (Exception)
-			{
-				return new Tuple<bool, object>(false, null);
-			}
-		}
-
+		
 		/// <summary>
 		/// Returns the default value of the specified <see cref="Type"/>.
 		/// </summary>
@@ -271,7 +262,7 @@ namespace AutoCli.Representation
 		/// <returns>
 		/// A dictionary mapping each parameter to a value.
 		/// </returns>
-		private static IDictionary<Parameter, object> ParseArgs(IEnumerable<Parameter> parameters, string[] args)
+		private IDictionary<Parameter, object> ParseArgs(IEnumerable<Parameter> parameters, string[] args)
 		{
 			var results = new Dictionary<Parameter, object>();
 			Parameter? param = null;

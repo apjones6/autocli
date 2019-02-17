@@ -21,7 +21,7 @@ namespace AutoCli
 		/// <summary>
 		/// Gets the output object.
 		/// </summary>
-		public Object Result { get; internal set; }
+		public object Result { get; internal set; }
 
 		/// <summary>
 		/// Writes the provided content of the specified type, using the standard output mechanisms

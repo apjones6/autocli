@@ -1,4 +1,8 @@
-# patch
+# minor
+* Add serializers to read command line arguments
+* Add JSON serializer
+* Add global name conventions (kebab and snake available)
+* Display alises for system types
 * Add README information
 
 # 1.1.0 (Sep 09, 2018)

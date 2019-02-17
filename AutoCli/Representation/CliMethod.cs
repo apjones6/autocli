@@ -93,6 +93,7 @@ namespace AutoCli.Representation
 
 			if (!handled)
 			{
+				// TODO: Also show an input error
 				ShowHelp();
 			}
 

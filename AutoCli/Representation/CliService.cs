@@ -89,6 +89,7 @@ namespace AutoCli.Representation
 
 			if (!handled)
 			{
+				// TODO: Also show an input error
 				ShowHelp();
 			}
 
@@ -116,7 +117,7 @@ namespace AutoCli.Representation
 		/// </returns>
 		private CliMethod GetMethod(MethodInfo info)
 		{
-			var name = CliMethod.GetMethodName(info);
+			var name = Cli.ApplyNameConvention(CliMethod.GetMethodName(info));
 			var method = methods.FirstOrDefault(x => x.Name == name);
 			if (method == null)
 			{
