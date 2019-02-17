@@ -114,6 +114,7 @@ namespace AutoCli.Representation
 
 			// Inspect the return type to output data for Task<T> and T return methods, but not for Task and void methods
 			// NOTE: Use declared type to safely handle Task<VoidTaskResult>
+			Output output = null;
 			if (typeof(Task).IsAssignableFrom(info.ReturnType))
 			{
 				var task = (Task)result;
@@ -122,16 +123,18 @@ namespace AutoCli.Representation
 				{
 					var declaredType = info.ReturnType.GetGenericArguments()[0];
 					var taskResult = info.ReturnType.GetProperty("Result").GetValue(task);
-					var output = Cli.CreateOutput(taskResult, declaredType);
-					Console.WriteLine();
-					output.Write();
+					output = Cli.CreateOutput(taskResult, declaredType);
 				}
 			}
 			else if (info.ReturnType != typeof(void))
 			{
-				var output = Cli.CreateOutput(result, info.ReturnType);
-				Console.WriteLine();
-				output.Write();
+				output = Cli.CreateOutput(result, info.ReturnType);
+			}
+
+			// If an output was created, write it
+			if (output != null)
+			{
+				Cli.Write(output);
 			}
 
 			return true;
@@ -266,9 +269,21 @@ namespace AutoCli.Representation
 		{
 			var results = new Dictionary<Parameter, object>();
 			Parameter? param = null;
+
+			var expectOutputPath = false;
+
 			foreach (var arg in args)
 			{
-				if (arg.StartsWith("--"))
+				if (expectOutputPath)
+				{
+					Cli.SetOutputPath(arg);
+					expectOutputPath = false;
+				}
+				else if (arg == "-o" || arg == "--output")
+				{
+					expectOutputPath = true;
+				}
+				else if (arg.StartsWith("--"))
 				{
 					if (param != null)
 					{
@@ -297,9 +312,14 @@ namespace AutoCli.Representation
 				}
 			}
 
+			if (expectOutputPath)
+			{
+				throw new ArgumentException("Expected output path, but found no more arguments.");
+			}
+
 			if (param != null)
 			{
-				throw new ArgumentException($"Expected value for {param.Value.Name}, but no more arguments.");
+				throw new ArgumentException($"Expected value for {param.Value.Name}, but found no more arguments.");
 			}
 
 			return results;

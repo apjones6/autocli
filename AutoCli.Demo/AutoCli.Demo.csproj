@@ -58,6 +58,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="YamlDotNet, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.5.4.0\lib\net45\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Group.cs" />
@@ -84,6 +87,10 @@
     <ProjectReference Include="..\AutoCli.Json\AutoCli.Json.csproj">
       <Project>{730b3f37-a5bb-45ec-990b-4d7974049190}</Project>
       <Name>AutoCli.Json</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AutoCli.Yaml\AutoCli.Yaml.csproj">
+      <Project>{ce6d70b5-8fac-4809-8b3e-70c33f97567c}</Project>
+      <Name>AutoCli.Yaml</Name>
     </ProjectReference>
     <ProjectReference Include="..\AutoCli\AutoCli.csproj">
       <Project>{d0396e9c-d16d-4e5f-b1c5-6537747c3195}</Project>

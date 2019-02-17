@@ -1,6 +1,8 @@
 # minor
 * Add serializers to read command line arguments
+* Add output file support (specify -o|--output <filename>)
 * Add JSON serializer
+* Add YAML serializer
 * Add global name conventions (kebab and snake available)
 * Display alises for system types
 * Add README information

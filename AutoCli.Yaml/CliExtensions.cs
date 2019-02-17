@@ -1,22 +1,21 @@
-﻿namespace AutoCli.Json
+﻿namespace AutoCli.Yaml
 {
 	/// <summary>
 	/// Describes extensions to the <see cref="Cli"/> classes to simplify adding
-	/// and using JSON.
+	/// and using YAML.
 	/// </summary>
 	public static class CliExtensions
 	{
 		/// <summary>
-		/// Adds a JSON serializer to this <see cref="Cli"/> instance.
+		/// Adds a YAML serializer to this <see cref="Cli"/> instance.
 		/// </summary>
 		/// <param name="cli">The CLI instance to extend.</param>
-		/// <param name="options">The JSON options.</param>
 		/// <returns>
 		/// The <see cref="Cli"/> instance.
 		/// </returns>
-		public static Cli AddJson(this Cli cli, JsonOptions options = null)
+		public static Cli AddYaml(this Cli cli)
 		{
-			return cli.AddSerializer(new CliJsonSerializer(options ?? new JsonOptions()));
+			return cli.AddSerializer(new CliYamlSerializer());
 		}
 	}
 }

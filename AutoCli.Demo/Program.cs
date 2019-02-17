@@ -1,4 +1,5 @@
 ﻿using AutoCli.Json;
+using AutoCli.Yaml;
 using System;
 
 namespace AutoCli.Demo
@@ -11,6 +12,7 @@ namespace AutoCli.Demo
 				.SetDescription("A demo CLI application for the AutoCli package features")
 				.SetNameConvention(NameConvention.KebabCase)
 				.AddJson()
+				.AddYaml()
 				.SetResolver(GetService)
 				.AddService<IGroupService>()
 				.AddService<IUserService>()

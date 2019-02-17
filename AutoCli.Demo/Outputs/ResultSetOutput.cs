@@ -6,15 +6,29 @@ namespace AutoCli.Demo.Outputs
 	[CliOutputType(DeclaredType = typeof(ResultSet<>))]
 	public class ResultSetOutput : Output
 	{
-		public override void Write()
+		public override object GetConsoleContent()
 		{
+			var contents = new ConsoleContent();
+
 			var prop = DeclaredType.GetProperty("Results");
 			var resultsType = prop.PropertyType;
 			var results = prop.GetValue(Result);
-			Write(results, resultsType);
 
-			var total = (long)DeclaredType.GetProperty("Total").GetValue(Result);
-			Console.WriteLine($" TOTAL:  {total}");
+			contents.Add(CreateOutput(results, resultsType).GetConsoleContent());
+			contents.Add(new { Total = (long)DeclaredType.GetProperty("Total").GetValue(Result) });
+
+			return contents;
 		}
+
+		//public override void Write()
+		//{
+		//	var prop = DeclaredType.GetProperty("Results");
+		//	var resultsType = prop.PropertyType;
+		//	var results = prop.GetValue(Result);
+		//	Write(results, resultsType);
+
+		//	var total = (long)DeclaredType.GetProperty("Total").GetValue(Result);
+		//	Console.WriteLine($" TOTAL:  {total}");
+		//}
 	}
 }

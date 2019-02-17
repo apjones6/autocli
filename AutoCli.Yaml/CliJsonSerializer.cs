@@ -1,29 +1,22 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
+using YamlDotNet.Serialization;
 
-namespace AutoCli.Json
+namespace AutoCli.Yaml
 {
 	/// <summary>
-	/// A <see cref="ICliSerializer"/> implementation which supports JSON parameter
-	/// format from the command line, and input/output to JSON files.
+	/// A <see cref="ICliSerializer"/> implementation which supports YAML input/output files.
 	/// </summary>
-	public class CliJsonSerializer : ICliSerializer
+	public class CliYamlSerializer : ICliSerializer
 	{
-		private readonly JsonSerializer serializer;
+		private readonly ISerializer serializer;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CliJsonSerializer"/> class.
+		/// Initializes a new instance of the <see cref="CliYamlSerializer"/> class.
 		/// </summary>
-		/// <param name="options">The JSON options.</param>
-		public CliJsonSerializer(JsonOptions options)
+		public CliYamlSerializer()
 		{
-			serializer = new JsonSerializer
-			{
-				DefaultValueHandling = options.DefaultValueHandling,
-				Formatting = options.Formatting,
-				NullValueHandling = options.NullValueHandling
-			};
+			serializer = new SerializerBuilder().Build();
 		}
 
 		/// <summary>
@@ -36,7 +29,7 @@ namespace AutoCli.Json
 		/// </returns>
 		public bool CanWrite(string extension)
 		{
-			return extension == ".json";
+			return extension == ".yml" || extension == ".yaml";
 		}
 
 		/// <summary>
@@ -51,16 +44,8 @@ namespace AutoCli.Json
 		/// </returns>
 		public bool TryReadParameter(string input, Type type, out object parameter)
 		{
-			try
-			{
-				parameter = JsonConvert.DeserializeObject(input, type);
-				return true;
-			}
-			catch
-			{
-				parameter = null;
-				return false;
-			}
+			parameter = null;
+			return false;
 		}
 
 		/// <summary>

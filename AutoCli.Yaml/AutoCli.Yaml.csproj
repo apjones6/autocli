@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Authors>Alastair Jones</Authors>
-		<Description>Extends the AutoCli library with JSON support for command line parameters and input/output file functionality.</Description>
+		<Description>Extends the AutoCli library with YAML support for input/output file functionality.</Description>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RepositoryUrl>https://github.com/apjones6/autocli</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -11,7 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+		<PackageReference Include="YamlDotNet" Version="5.4.0" />
 	</ItemGroup>
 
 	<ItemGroup>

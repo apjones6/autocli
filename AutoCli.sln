@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoCli", "AutoCli\AutoCli.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCli.Json", "AutoCli.Json\AutoCli.Json.csproj", "{730B3F37-A5BB-45EC-990B-4D7974049190}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCli.Yaml", "AutoCli.Yaml\AutoCli.Yaml.csproj", "{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{730B3F37-A5BB-45EC-990B-4D7974049190}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{730B3F37-A5BB-45EC-990B-4D7974049190}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{730B3F37-A5BB-45EC-990B-4D7974049190}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

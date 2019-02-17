@@ -13,6 +13,7 @@ namespace AutoCli.Demo
 		[CliOutput(Key = true)]
 		public Guid Id { get; set; }
 
+		[CliIgnore]
 		public Guid[] MemberIds { get; set; }
 
 		[CliOutput(Order = 1)]

@@ -19,6 +19,8 @@ namespace AutoCli.Demo
 		{
 			Message = message;
 		}
+
+		public bool IsSuccess => (int)StatusCode < 400;
 		
 		public HttpStatusCode StatusCode { get; set; }
 

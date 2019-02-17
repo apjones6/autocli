@@ -65,8 +65,10 @@ The primary method of the `Cli` class, should be provided with the command line 
 
 ## Roadmap
 
-* Input classes/structs
+* Better error output on invalid arguments
 * Input/output YAML/JSON/XML/other file data
+* Custom options, for example -t/--tenant to set tenant environment for command to run as
+* Hidden parameters (set by custom options / handler)
 * Clear method alias overloads (different parameter sets)
 * Default parameters (unnamed)
 * Powershell completion

@@ -25,6 +25,7 @@ namespace AutoCli
 
 		private string description;
 		private NameConvention nameConvention = NameConvention.KebabCase;
+		private string outputPath;
 		private IResolver resolver;
 
 		/// <summary>
@@ -310,7 +311,7 @@ namespace AutoCli
 			// Otherwise use fallback
 			if (!outputs.TryGetValue(declaredType, out var type) && !(declaredType.IsGenericType && outputs.TryGetValue(declaredType.GetGenericTypeDefinition(), out type)))
 			{
-				type = typeof(CliOutput);
+				type = typeof(Output);
 			}
 
 			var output = (Output)Activator.CreateInstance(type);
@@ -385,6 +386,20 @@ namespace AutoCli
 		}
 
 		/// <summary>
+		/// Sets the output path to use, which causes method output to be written to the file instead of console.
+		/// </summary>
+		/// <param name="path">The output path.</param>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		internal Cli SetOutputPath(string path)
+		{
+			// TODO: check the available serializers for one which supports this extension
+			outputPath = Path.GetFullPath(path);
+			return this;
+		}
+
+		/// <summary>
 		/// Sets the <see cref="Cli"/> resolver function, used to instantiate service instances to invoke.
 		/// </summary>
 		/// <param name="resolver">The CLI resolver function.</param>
@@ -444,6 +459,7 @@ namespace AutoCli
 
 			Console.WriteLine("Options:");
 			Console.WriteLine("      --help     Show help information");
+			Console.WriteLine("  -o, --output   Sets the output path for file output");
 			Console.WriteLine("  -v, --version  Show version");
 			Console.WriteLine();
 
@@ -457,6 +473,43 @@ namespace AutoCli
 					Console.WriteLine($"  {s.Name.PadRight(padding)}  {s.Description}");
 				}
 			}
+		}
+
+		/// <summary>
+		/// Writes the provided <see cref="Output"/> instance to the configured output target,
+		/// console by default but may be a file.
+		/// </summary>
+		/// <param name="output">The output to write.</param>
+		internal void Write(Output output)
+		{
+			// If an output path is specified, writer to the first serializer
+			// which can write to this file type
+			ICliSerializer serializer = null;
+			if (outputPath != null)
+			{
+				var extension = Path.GetExtension(outputPath);
+				serializer = serializers.FirstOrDefault(x => x.CanWrite(extension));
+				if (serializer == null)
+				{
+					throw new ApplicationException($"No serializer found which can write to \"{extension}\" files.");
+				}
+
+				// Ignore and fallback to standard serializer if no file content
+				var content = output.GetFileContent();
+				if (content != null)
+				{
+					using (var stream = File.Create(outputPath))
+					{
+						// TODO: Console confirmation the file was written, and the absolute path
+						// TODO: Add FileContent class which can include ConsoleOutput to write in addition to the file
+						serializer.Write(stream, content);
+						return;
+					}
+				}
+			}
+
+			// Use the standard (console) serializer
+			serializers[0].Write(Console.OpenStandardOutput(), output.GetConsoleContent());
 		}
 	}
 }

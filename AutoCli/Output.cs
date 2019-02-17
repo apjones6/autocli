@@ -6,7 +6,7 @@ namespace AutoCli
 	/// Describes the output from executing a method, and is responsible for writing the output to
 	/// the destination (usually console).
 	/// </summary>
-	public abstract class Output
+	public class Output
 	{
 		/// <summary>
 		/// Gets the <see cref="AutoCli.Cli"/> instance.
@@ -24,23 +24,49 @@ namespace AutoCli
 		public object Result { get; internal set; }
 
 		/// <summary>
-		/// Writes the provided content of the specified type, using the standard output mechanisms
-		/// to determine an appropriate <see cref="Output"/> type to use.
+		/// Returns the object to write to console (when using console output), defaults to the result
+		/// property value.
 		/// </summary>
 		/// <remarks>
-		/// Misuse of this method can cause recursive invocations resulting in a stack overflow, so
-		/// care should be taken in its implementation.
+		/// When a <see cref="ConsoleContent"/> instance is returned, it allows for richer console
+		/// formatting by aggregating objects in the response.
 		/// </remarks>
-		/// <param name="content">The content data.</param>
-		/// <param name="contentType">The content type.</param>
-		protected void Write(object content, Type contentType)
+		/// <returns>
+		/// The console content to write.
+		/// </returns>
+		public virtual object GetConsoleContent()
 		{
-			Cli.CreateOutput(content, contentType).Write();
+			return Result;
 		}
 
 		/// <summary>
-		/// Writes the result contained in this <see cref="Output"/> to the current console.
+		/// Returns the object to write to a file (when using file output), defaults to the result
+		/// property value.
 		/// </summary>
-		public abstract void Write();
+		/// <remarks>
+		/// This method allows modification of the object, or by returning null can prevent file
+		/// content being written at all (command line will be used instead).
+		/// </remarks>
+		/// <returns>
+		/// The file content to write.
+		/// </returns>
+		public virtual object GetFileContent()
+		{
+			return Result;
+		}
+
+		/// <summary>
+		/// Returns a new instance of the <see cref="Output"/> class with the provided
+		/// content data and its declared type.
+		/// </summary>
+		/// <param name="content">The output content data.</param>
+		/// <param name="contentType">The output declared type.</param>
+		/// <returns>
+		/// A new <see cref="Output"/> instance.
+		/// </returns>
+		protected Output CreateOutput(object content, Type contentType)
+		{
+			return Cli.CreateOutput(content, contentType);
+		}
 	}
 }
