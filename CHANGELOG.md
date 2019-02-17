@@ -1,10 +1,10 @@
 # minor
-* Add serializers to read command line arguments
-* Add output file support (specify -o|--output <filename>)
+* Add output file support through serializers (specify -o|--output <filename>)
+* Add command line argument parsing to serializers
 * Add JSON serializer
 * Add YAML serializer
 * Add global name conventions (kebab and snake available)
-* Display alises for system types
+* Display aliases for system types
 * Add README information
 
 # 1.1.0 (Sep 09, 2018)
