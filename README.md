@@ -21,6 +21,8 @@ class Program
             .AddService<IUserService>()
             .AddExtensions()
             .AddOutputs()
+            .AddJson()
+            .AddYaml()
             .Execute(args);
     }
 }
@@ -51,6 +53,10 @@ Adds the specified service type to the `Cli` instance. It will scrape service in
 
 Searches all available assemblies for extension methods for any of the added service interfaces, and adds them. The `CliMethodAttribute` and `CliIgnoreAttribute` rules apply as normal. _This should be called after all services have been registered._
 
+### `AddJson` _(Requires AutoCli.Json)_
+
+Adds a JSON serializer, which is able to input JSON files or JSON formatted strings for parameter values, and write the output to a JSON file instead of the console.
+
 ### `AddOutputs`
 
 Searches all available assemblies for classes inherited from `Output` and adds them. The output class allows you to customize how method outputs are written. The AutoCli library knows how to output scalar values, enumerables, and classes by default, but the solution is 'one size fits all'. Outputs are particularly good for handling common wrapper classes, such as those with HTTP status information where the content (when successful) is in an inner property.
@@ -58,6 +64,14 @@ Searches all available assemblies for classes inherited from `Output` and adds t
 ### `AddOutput`
 
 Allows you to add a single `Output` class to the `Cli` instance, in a similar way to adding all using `AddOutputs`.
+
+### `AddSerializer`
+
+Adds a custom `ICliSerializer` implementation to be used, which is used during console parameter parsing for unsupported types (such as objects), and during file input and output when used. The serializer can be specified as the type (e.g. `AddSerializer<MySerializer>()`) or provided as an instance (e.g. `AddSerializer(new MySerializer(options, ...))`)
+
+### `AddYaml` _(Requires AutoCli.Yaml)_
+
+Adds a YAML serializer, which is able to input YAML files for parameter values, and write the output to a YAML file instead of the console.
 
 ### `Execute`
 

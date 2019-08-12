@@ -1,0 +1,34 @@
+=== EXAMPLES ==========================
+
+demoapp groups update --group-id 11111111111111 -i:file --group group.yml -o result.json
+
+demoapp.exe groups create --group "{name:\"Group 10\",visibility:\"Public\"}"
+
+demoapp groups update --args arguments.xml
+
+=== SPEC ==============================
+
+-i:<value> sets the input mode to the value for all following arguments. Can be set again to change it. Supports -i:file and -i:cmd
+
+-o sets the output file location to write (uses console otherwise)
+
+--args sets all arguments to be provided from a single file, with root elements being parameter names, and values deserializing to the value to send
+
+Need extension libraries for YAML, JSON, XML input/output, and general file support in AutoCli (won't be useful without 1+ extensions)
+
+Cli.Builder
+	...
+	.AddSerializer<MyCustomSerializer>()
+	.AddSerializer(new MyOtherSerializer())
+	.AddJson()
+	.AddXml()
+	.AddYaml()
+	.SetInput(InputMode.File)
+	.SetOutput(OutputMode.File)
+	...
+
+Implement console parameter handling as a built-in serializer
+
+Serializer can:
+	Read arguments for a given parameter type (e.g. JSON serializer can handle inline JSON on command line)
+	Read/write a given file extension

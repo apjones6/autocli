@@ -1,5 +1,4 @@
 ﻿using AutoCli.Attributes;
-using System;
 
 namespace AutoCli.Demo.Outputs
 {
@@ -17,16 +16,12 @@ namespace AutoCli.Demo.Outputs
 				var content = DeclaredType.GetProperty("Content").GetValue(response);
 				contents.Add(CreateOutput(content, contentType).GetConsoleContent());
 				contents.Add(ConsoleContent.SEPARATOR);
-				//Write(content, contentType);
-				//Console.WriteLine();
 			}
 
 			contents.Add(new { Status = $"{(int)response.StatusCode} ({response.StatusCode})" });
-			//Console.WriteLine($" STATUS:  {(int)response.StatusCode} ({response.StatusCode})");
 			if (!string.IsNullOrWhiteSpace(response.Message))
 			{
 				contents.Add(new { response.Message });
-				//Console.WriteLine($" MESSAGE:  {response.Message}");
 			}
 
 			return contents;
@@ -50,24 +45,5 @@ namespace AutoCli.Demo.Outputs
 
 			return null;
 		}
-
-		//public override void Write()
-		//{
-		//	var response = (Response)Result;
-
-		//	if (response.IsSuccess && DeclaredType.IsGenericType)
-		//	{
-		//		var contentType = DeclaredType.GetGenericArguments()[0];
-		//		var content = DeclaredType.GetProperty("Content").GetValue(response);
-		//		Write(content, contentType);
-		//		Console.WriteLine();
-		//	}
-
-		//	Console.WriteLine($" STATUS:  {(int)response.StatusCode} ({response.StatusCode})");
-		//	if (!string.IsNullOrWhiteSpace(response.Message))
-		//	{
-		//		Console.WriteLine($" MESSAGE:  {response.Message}");
-		//	}
-		//}
 	}
 }

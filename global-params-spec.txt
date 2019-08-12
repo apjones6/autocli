@@ -1,0 +1,19 @@
+=== EXAMPLES ==========================
+
+demoapp groups get --tenant acme --group-id 11111111111111
+
+demoapp.exe groups create --group "{name:\"Group 10\",visibility:\"Public\"}" -t acme -u ivy -p P455w0rd!
+
+=== SPEC ==============================
+
+Ability to define custom parameters in the Cli.Builder stage:
+
+Cli.Builder
+	...
+	.AddOption("tenant", 't', (ctx) => ctx.AddParameter("principal", PrincipalHelper.CreatePrincipal(ctx.Value)))
+	...
+
+This implementation then adds the parameter, but using the context other changes may be possible.
+
+AutoCli should be modified to have an evaluation context while building the data. This then allows modifications
+more easily, and allows options to be properly taken into account when resolving overloads
