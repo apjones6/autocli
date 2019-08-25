@@ -7,9 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCli.Demo", "AutoCli.Dem
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoCli", "AutoCli\AutoCli.csproj", "{D0396E9C-D16D-4E5F-B1C5-6537747C3195}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCli.Json", "AutoCli.Json\AutoCli.Json.csproj", "{730B3F37-A5BB-45EC-990B-4D7974049190}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoCli.Json", "AutoCli.Json\AutoCli.Json.csproj", "{730B3F37-A5BB-45EC-990B-4D7974049190}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCli.Yaml", "AutoCli.Yaml\AutoCli.Yaml.csproj", "{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoCli.Yaml", "AutoCli.Yaml\AutoCli.Yaml.csproj", "{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCli.Tests", "AutoCli.Tests\AutoCli.Tests.csproj", "{B80C8773-4F5F-4E8D-B56B-CDF3A34B9297}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE6D70B5-8FAC-4809-8B3E-70C33F97567C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B80C8773-4F5F-4E8D-B56B-CDF3A34B9297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B80C8773-4F5F-4E8D-B56B-CDF3A34B9297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B80C8773-4F5F-4E8D-B56B-CDF3A34B9297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B80C8773-4F5F-4E8D-B56B-CDF3A34B9297}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -24,6 +24,7 @@ namespace AutoCli
 		private readonly List<CliService> services;
 
 		private string description;
+		private Assembly entry = Assembly.GetEntryAssembly();
 		private NameConvention nameConvention = NameConvention.KebabCase;
 		private string outputPath;
 		private IResolver resolver;
@@ -42,7 +43,7 @@ namespace AutoCli
 		/// <summary>
 		/// Gets the application name currently executing (without path or extension).
 		/// </summary>
-		public static string AppName => Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location);
+		public string AppName => Path.GetFileNameWithoutExtension(entry.Location);
 
 		/// <summary>
 		/// Gets a new <see cref="Cli"/> instance to start fluent usage.
@@ -66,6 +67,7 @@ namespace AutoCli
 			var methods = AppDomain.CurrentDomain
 				.GetAssemblies()
 				.AsParallel()
+				.Where(x => !x.IsDynamic)
 				.SelectMany(x => x.GetExportedTypes().Where(t => t.GetCustomAttribute<CliExtensionsAttribute>() != null))
 				.SelectMany(x => x.GetMethods(BindingFlags.Static | BindingFlags.Public))
 				.Where(x => x.IsDefined(typeof(ExtensionAttribute), false) && !x.IsDefined(typeof(CliIgnoreAttribute)))
@@ -129,6 +131,7 @@ namespace AutoCli
 			var types = AppDomain.CurrentDomain
 				.GetAssemblies()
 				.AsParallel()
+				.Where(x => !x.IsDynamic)
 				.SelectMany(x => x.GetExportedTypes().Where(t => t.IsSubclassOf(typeof(Output)) && t.IsDefined(typeof(CliOutputTypeAttribute))))
 				.ToArray();
 
@@ -225,7 +228,7 @@ namespace AutoCli
 				}
 				else if (args[0] == "-v" || args[0] == "--version")
 				{
-					var version = FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location);
+					var version = FileVersionInfo.GetVersionInfo(entry.Location);
 					Console.WriteLine(AppName);
 					Console.WriteLine(version.FileVersion);
 					// Extra newline for powershell usage
@@ -373,6 +376,19 @@ namespace AutoCli
 		}
 
 		/// <summary>
+		/// Sets the <see cref="Cli"/> entry assembly, for showing help information and version.
+		/// </summary>
+		/// <param name="entry">The entry assembly.</param>
+		/// <returns>
+		/// This <see cref="Cli"/> instance.
+		/// </returns>
+		public Cli SetEntry(Assembly entry)
+		{
+			this.entry = entry ?? throw new ArgumentNullException(nameof(entry));
+			return this;
+		}
+
+		/// <summary>
 		/// Sets the <see cref="Cli"/> name convention, which determines how names are formatted for use.
 		/// </summary>
 		/// <param name="nameConvention">The name convention to apply.</param>
@@ -473,6 +489,10 @@ namespace AutoCli
 					Console.WriteLine($"  {s.Name.PadRight(padding)}  {s.Description}");
 				}
 			}
+			else
+			{
+				Console.WriteLine("  (none)");
+			}
 		}
 
 		/// <summary>
@@ -509,7 +529,7 @@ namespace AutoCli
 			}
 
 			// Use the standard (console) serializer
-			serializers[0].Write(Console.OpenStandardOutput(), output.GetConsoleContent());
+			serializers[0].Write(null, output.GetConsoleContent());
 		}
 	}
 }

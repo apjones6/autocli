@@ -97,63 +97,57 @@ namespace AutoCli.Serializers
 			// enumerable objects from multiple content 'items'
 			var contents = c as ConsoleContent ?? new ConsoleContent(c);
 			
-			using (var writer = new StreamWriter(stream, Console.OutputEncoding, 1024, true))
+			Console.WriteLine();
+
+			foreach (var content in contents.Contents)
 			{
-				writer.WriteLine();
-
-				foreach (var content in contents.Contents)
+				// Handle separator special const to allow formatting
+				if (content == ConsoleContent.SEPARATOR)
 				{
-					// Handle separator special const to allow formatting
-					if (content == ConsoleContent.SEPARATOR)
-					{
-						writer.WriteLine();
-						continue;
-					}
+					Console.WriteLine();
+					continue;
+				}
 
-					var details = Initialize(content);
-					if (details.Props != null)
+				var details = Initialize(content);
+				if (details.Props != null)
+				{
+					if (details.IsTable)
 					{
-						if (details.IsTable)
+						// Find the width for each column
+						var widths = details.Cells[0].Select((x, i) => details.Cells.Select(r => r[i]).Max(r => r?.Length ?? 0)).ToArray();
+
+						// Write table
+						for (var i = 0; i < details.Cells.Count; ++i)
 						{
-							// Find the width for each column
-							var widths = details.Cells[0].Select((x, i) => details.Cells.Select(r => r[i]).Max(r => r?.Length ?? 0)).ToArray();
-
-							// Write table
-							for (var i = 0; i < details.Cells.Count; ++i)
+							for (var j = 0; j < details.Cells[i].Count; ++j)
 							{
-								for (var j = 0; j < details.Cells[i].Count; ++j)
-								{
-									writer.Write(" " + (details.Cells[i][j] ?? string.Empty).PadRight(widths[j] + 2));
-								}
+								Console.Write(" " + (details.Cells[i][j] ?? string.Empty).PadRight(widths[j] + 2));
+							}
 
-								writer.WriteLine();
-							}
-						}
-						else
-						{
-							var width = details.Cells[0].Max(x => x.Length);
-							var len = details.Cells[0].Count;
-							for (var i = 0; i < len; ++i)
-							{
-								writer.WriteLine($" {details.Cells[0][i].PadLeft(width)}:  {details.Cells[1][i]}");
-							}
-						}
-					}
-					else if (typeof(IEnumerable).IsAssignableFrom(content.GetType()))
-					{
-						foreach (var item in (IEnumerable)content)
-						{
-							writer.WriteLine(item);
+							Console.WriteLine();
 						}
 					}
 					else
 					{
-						writer.WriteLine(content);
+						var width = details.Cells[0].Max(x => x.Length);
+						var len = details.Cells[0].Count;
+						for (var i = 0; i < len; ++i)
+						{
+							Console.WriteLine($" {details.Cells[0][i].PadLeft(width)}:  {details.Cells[1][i]}");
+						}
 					}
 				}
-
-				// Flush content, but don't dispose the console stream!
-				writer.Flush();
+				else if (typeof(IEnumerable).IsAssignableFrom(content.GetType()))
+				{
+					foreach (var item in (IEnumerable)content)
+					{
+						Console.WriteLine(item);
+					}
+				}
+				else
+				{
+					Console.WriteLine(content);
+				}
 			}
 		}
 

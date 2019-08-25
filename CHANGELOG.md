@@ -6,6 +6,7 @@
 * Add global name conventions (kebab and snake available)
 * Display aliases for system types
 * Add README information
+* Add tests
 
 # 1.1.0 (Sep 09, 2018)
 * Fix to allow optional service, method and parameter attributes
