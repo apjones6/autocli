@@ -51,7 +51,7 @@ namespace AutoCli.Representation
 
 			parameters = info
 				.GetParameters()
-				.Select(x => new Parameter(x, method.Cli))
+				.Select((x, i) => new Parameter(x, i, method.Cli))
 				.ToArray();
 		}
 
@@ -265,10 +265,9 @@ namespace AutoCli.Representation
 					{
 						throw new ArgumentException($"Expected value for {param.Name}, but token was \"{arg}\".");
 					}
-
-					// Structs don't default to null, so check for a name
+					
 					param = parameters.FirstOrDefault(x => x.Name.Equals(arg.Substring(2), StringComparison.OrdinalIgnoreCase));
-					if (param.Name == null)
+					if (param == null)
 					{
 						throw new ArgumentException($"Unknown parameter \"{arg}\".");
 					}
@@ -309,7 +308,7 @@ namespace AutoCli.Representation
 			private readonly Cli cli;
 			private readonly string name;
 
-			public Parameter(ParameterInfo info, Cli cli)
+			public Parameter(ParameterInfo info, int index, Cli cli)
 			{
 				this.cli = cli ?? throw new ArgumentNullException(nameof(cli));
 
@@ -318,7 +317,7 @@ namespace AutoCli.Representation
 				name = GetParameterName(info);
 				Type = info.ParameterType;
 
-				if (info.Member.IsDefined(typeof(ExtensionAttribute), false))
+				if (index == 0 && info.Member.IsDefined(typeof(ExtensionAttribute), false))
 				{
 					IsThis = true;
 				}

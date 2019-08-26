@@ -32,7 +32,7 @@ namespace AutoCli.Tests
 		}
 
 		[Test]
-		public void Help_Method_Output()
+		public void Help_AddMember_Output()
 		{
 			var output = Execute("groups add_member");
 			Assert.That(output, Is.EqualTo(new[]

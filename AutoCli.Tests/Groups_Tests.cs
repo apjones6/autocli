@@ -58,7 +58,7 @@ namespace AutoCli.Tests
 		}
 		
 		[Test]
-		public void Help_Method_Output()
+		public void Help_AddMember_Output()
 		{
 			var output = Execute("groups add-member");
 			Assert.That(output, Is.EqualTo(new[]
@@ -69,6 +69,40 @@ namespace AutoCli.Tests
 				"",
 				"Parameters:",
 				"  --group-id <Guid> --user-id <Guid>"
+			}));
+		}
+
+		[Test]
+		public void Help_Create_Output()
+		{
+			var output = Execute("groups create");
+			Assert.That(output, Is.EqualTo(new[]
+			{
+				"Usage: AutoCli.Tests groups create params...",
+				"",
+				"Create a group",
+				"",
+				"Parameters:",
+				"  --group <Group>",
+				"  --name <string> [--visibility <GroupVisibility>]"
+			}));
+		}
+
+		[Test]
+		public void Help_List_Output()
+		{
+			// TODO: don't output an error for -h/--help as it's clear what the user wants
+			var output = Execute("groups list --help");
+			Assert.That(output, Is.EqualTo(new[]
+			{
+				"Unknown parameter \"--help\".",
+				"",
+				"Usage: AutoCli.Tests groups list params...",
+				"",
+				"List groups",
+				"",
+				"Parameters:",
+				"  [--skip <int>] [--take <int>]"
 			}));
 		}
 

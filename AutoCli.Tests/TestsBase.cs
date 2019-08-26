@@ -53,9 +53,14 @@ namespace AutoCli.Tests
 		{
 		}
 
-		protected string[] Execute(string input)
+		protected string[] Execute(params string[] input)
 		{
-			cli.Execute(input.Split(' '));
+			if (input.Length == 1 && input[0].Contains(' '))
+			{
+				input = input[0].Split(' ');
+			}
+
+			cli.Execute(input);
 
 			standardOutput.Flush();
 			var sb = standardOutput.GetStringBuilder();
