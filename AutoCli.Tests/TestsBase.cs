@@ -31,6 +31,8 @@ namespace AutoCli.Tests
 				.AddExtensions()
 				.AddOutputs();
 
+			SetUpCli(cli);
+
 			SetUpMocks();
 		}
 

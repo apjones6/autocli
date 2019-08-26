@@ -51,13 +51,8 @@ namespace AutoCli.Representation
 
 			parameters = info
 				.GetParameters()
-				.Select(x => new Parameter { DefaultValue = x.DefaultValue, IsDefault = x.HasDefaultValue, Name = Cli.ApplyNameConvention(GetParameterName(x)), Type = x.ParameterType })
+				.Select(x => new Parameter(x, method.Cli))
 				.ToArray();
-
-			if (info.IsDefined(typeof(ExtensionAttribute), false))
-			{
-				parameters[0].IsThis = true;
-			}
 		}
 
 		/// <summary>
@@ -166,25 +161,6 @@ namespace AutoCli.Representation
 		}
 
 		/// <summary>
-		/// Returns the name to use for the provided <see cref="ParameterInfo"/>, either from a
-		/// <see cref="CliParameterAttribute"/> or the actual param name.
-		/// </summary>
-		/// <param name="info">The <see cref="ParameterInfo"/> instance.</param>
-		/// <returns>
-		/// A string value.
-		/// </returns>
-		private static string GetParameterName(ParameterInfo info)
-		{
-			var attr = info.GetCustomAttribute<CliParameterAttribute>(true);
-			if (attr != null && attr.Name != null)
-			{
-				return attr.Name;
-			}
-
-			return info.Name;
-		}
-
-		/// <summary>
 		/// Returns the type name to use for the specified <see cref="Type"/>, which accounts
 		/// for nullable and system types.
 		/// </summary>
@@ -268,7 +244,7 @@ namespace AutoCli.Representation
 		private IDictionary<Parameter, object> ParseArgs(IEnumerable<Parameter> parameters, string[] args)
 		{
 			var results = new Dictionary<Parameter, object>();
-			Parameter? param = null;
+			Parameter param = null;
 
 			var expectOutputPath = false;
 
@@ -287,16 +263,16 @@ namespace AutoCli.Representation
 				{
 					if (param != null)
 					{
-						throw new ArgumentException($"Expected value for {param.Value.Name}, but token was \"{arg}\".");
+						throw new ArgumentException($"Expected value for {param.Name}, but token was \"{arg}\".");
 					}
 
 					// Structs don't default to null, so check for a name
 					param = parameters.FirstOrDefault(x => x.Name.Equals(arg.Substring(2), StringComparison.OrdinalIgnoreCase));
-					if (param.Value.Name == null)
+					if (param.Name == null)
 					{
 						throw new ArgumentException($"Unknown parameter \"{arg}\".");
 					}
-					else if (results.ContainsKey(param.Value))
+					else if (results.ContainsKey(param))
 					{
 						throw new ArgumentException($"Parameter \"{arg}\" has already been set.");
 					}
@@ -307,7 +283,7 @@ namespace AutoCli.Representation
 				}
 				else
 				{
-					results[param.Value] = ConvertType(arg, param.Value);
+					results[param] = ConvertType(arg, param);
 					param = null;
 				}
 			}
@@ -319,7 +295,7 @@ namespace AutoCli.Representation
 
 			if (param != null)
 			{
-				throw new ArgumentException($"Expected value for {param.Value.Name}, but found no more arguments.");
+				throw new ArgumentException($"Expected value for {param.Name}, but found no more arguments.");
 			}
 
 			return results;
@@ -328,13 +304,50 @@ namespace AutoCli.Representation
 		/// <summary>
 		/// Describes a parameter with enough information to be used through the execute process.
 		/// </summary>
-		private struct Parameter
+		private class Parameter
 		{
-			public object DefaultValue;
-			public bool IsDefault;
-			public bool IsThis;
-			public string Name;
-			public Type Type;
+			private readonly Cli cli;
+			private readonly string name;
+
+			public Parameter(ParameterInfo info, Cli cli)
+			{
+				this.cli = cli ?? throw new ArgumentNullException(nameof(cli));
+
+				DefaultValue = info.DefaultValue;
+				IsDefault = info.HasDefaultValue;
+				name = GetParameterName(info);
+				Type = info.ParameterType;
+
+				if (info.Member.IsDefined(typeof(ExtensionAttribute), false))
+				{
+					IsThis = true;
+				}
+			}
+
+			public object DefaultValue { get; }
+			public bool IsDefault { get; }
+			public bool IsThis { get; }
+			public string Name => cli.ApplyNameConvention(name);
+			public Type Type { get; }
+
+			/// <summary>
+			/// Returns the name to use for the provided <see cref="ParameterInfo"/>, either from a
+			/// <see cref="CliParameterAttribute"/> or the actual param name.
+			/// </summary>
+			/// <param name="info">The <see cref="ParameterInfo"/> instance.</param>
+			/// <returns>
+			/// A string value.
+			/// </returns>
+			private static string GetParameterName(ParameterInfo info)
+			{
+				var attr = info.GetCustomAttribute<CliParameterAttribute>(true);
+				if (attr != null && attr.Name != null)
+				{
+					return attr.Name;
+				}
+
+				return info.Name;
+			}
 		}
 	}
 }

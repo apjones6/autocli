@@ -3,7 +3,7 @@
 namespace AutoCli.Tests
 {
 	[TestFixture]
-	public class DefaultCommands_Tests : TestsBase
+	public class BuiltInCommands_Tests : TestsBase
 	{
 		[Test]
 		public void Help_WritesHelp()

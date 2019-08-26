@@ -12,8 +12,9 @@ namespace AutoCli.Representation
 	/// </summary>
 	internal class CliMethod
 	{
-		private readonly CliService service;
+		private readonly MethodInfo info;
 		private readonly List<CliParameters> parameters;
+		private readonly CliService service;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CliMethod"/> class for the specified
@@ -24,11 +25,11 @@ namespace AutoCli.Representation
 		public CliMethod(CliService service, MethodInfo info)
 		{
 			this.service = service ?? throw new ArgumentNullException(nameof(service));
+			this.info = info ?? throw new ArgumentNullException(nameof(info));
 			
 			parameters = new List<CliParameters>();
 
 			Description = info.GetCustomAttribute<CliMethodAttribute>(true)?.Description;
-			Name = Cli.ApplyNameConvention(GetMethodName(info));
 		}
 
 		/// <summary>
@@ -44,7 +45,7 @@ namespace AutoCli.Representation
 		/// <summary>
 		/// Gets the method name.
 		/// </summary>
-		public string Name { get; }
+		public string Name => Cli.ApplyNameConvention(GetMethodName(info));
 
 		/// <summary>
 		/// Adds the provided <see cref="MethodInfo"/> to this <see cref="CliMethod"/> instance as
